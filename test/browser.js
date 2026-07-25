@@ -109,6 +109,23 @@ async function foto(page, nombre) {
     "el resultado del dado no se muestra");
   await foto(page, "3-dado");
 
+  // los ecos: lo que hiciste antes tiene que volver
+  let ecos = 0;
+  const textosEco = [];
+  for (let t = 0; t < 14; t++) {
+    if (await page.$(".eco")) {
+      ecos++;
+      if (textosEco.length < 2) textosEco.push((await page.textContent(".eco")).trim());
+    }
+    if (await page.$(".opcion[data-op]")) await page.keyboard.press("2");
+    else if (await page.$('[data-act="continuar"]')) await page.click('[data-act="continuar"]');
+    else break;
+    await page.waitForTimeout(20);
+  }
+  afirmar(ecos > 0, `los ecos aparecen durante la run (${ecos} en 14 turnos)`,
+    "no apareció ningún eco: los turnos siguen sueltos");
+  textosEco.forEach(t => info("eco: «" + t + "»"));
+
   // alternamos teclado y mouse hasta llegar a un final
   let turnos = 0, i = 0;
   while (i++ < 300 && !(await page.$(".fin"))) {
@@ -127,6 +144,15 @@ async function foto(page, nombre) {
   if (await page.$(".fin")) {
     info("final: " + (await page.textContent(".fin h2")).trim() +
       " · " + (await page.textContent(".fila-kv.total")).replace(/\s+/g, " ").trim());
+    const rastro = await page.evaluate(() => {
+      const bloques = [...document.querySelectorAll(".bloque")];
+      const b = bloques.find(x => /dejaste atrás/i.test(x.textContent));
+      return b ? [...b.querySelectorAll(".fila-kv")].map(f => f.textContent.trim()) : null;
+    });
+    afirmar(rastro && rastro.length > 0,
+      `el resumen final lista lo que dejaste atrás (${rastro ? rastro.length : 0} entradas)`,
+      "el resumen final no muestra el rastro de la run");
+    if (rastro && rastro.length) info("rastro: " + rastro.slice(0, 3).join(" | "));
     await foto(page, "4-final");
   }
 
