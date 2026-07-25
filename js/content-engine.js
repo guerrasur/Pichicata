@@ -60,6 +60,45 @@ function sortearPieza(cands, usadasRun) {
   return fuente[PICHI.rndInt(fuente.length)];
 }
 
+/* Las PERSONAS van al revés que el resto de las piezas: acá querés que vuelvan.
+   Con un elenco que se repite dentro de la run, el viaje pasa a tener gente en
+   vez de una sucesión de desconocidos. El elenco se sortea de nuevo en cada run,
+   así la continuidad es interna y la variedad entre runs no se toca. */
+function sortearPersonaje(cands, usadasRun) {
+  if (!cands.length) return null;
+  var r = PICHI.run;
+  if (!r) return sortearPieza(cands, usadasRun);
+
+  var elenco = r.elenco || [];
+  var encuentros = r.encuentros || {};
+  var i, delElenco = [], conocidos = [], nuevos = [];
+
+  for (i = 0; i < cands.length; i++) {
+    var c = cands[i];
+    if (elenco.indexOf(c.id) !== -1) delElenco.push(c);
+    else if (encuentros[c.id]) conocidos.push(c);
+    else nuevos.push(c);
+  }
+
+  // el elenco tiene prioridad fuerte; los ya conocidos, una prioridad menor
+  var fuente;
+  if (delElenco.length && PICHI.chance(0.7)) fuente = delElenco;
+  else if (conocidos.length && PICHI.chance(0.35)) fuente = conocidos;
+  else if (nuevos.length) fuente = nuevos;
+  else fuente = delElenco.length ? delElenco : (conocidos.length ? conocidos : cands);
+
+  // dentro de la fuente elegida, el que menos apareció
+  var minimo = Infinity;
+  for (i = 0; i < fuente.length; i++) minimo = Math.min(minimo, encuentros[fuente[i].id] || 0);
+  var candidatos = [];
+  for (i = 0; i < fuente.length; i++) if ((encuentros[fuente[i].id] || 0) === minimo) candidatos.push(fuente[i]);
+
+  var elegido = candidatos[PICHI.rndInt(candidatos.length)];
+  encuentros[elegido.id] = (encuentros[elegido.id] || 0) + 1;
+  r.encuentros = encuentros;
+  return elegido;
+}
+
 /* ================= gating ================= */
 
 function cumpleStats(req, stats) {
@@ -208,7 +247,7 @@ function sortearPiezas(ev, ctx) {
   var slots = ev.slots || {};
   var piezas = {};
   if (slots.escenario) piezas.escenario = sortearPieza(candidatosSlot(PICHI.ESCENARIOS, slots.escenario), ctx.piezasUsadas);
-  if (slots.personaje) piezas.personaje = sortearPieza(candidatosSlot(PICHI.PERSONAJES, slots.personaje), ctx.piezasUsadas);
+  if (slots.personaje) piezas.personaje = sortearPersonaje(candidatosSlot(PICHI.PERSONAJES, slots.personaje), ctx.piezasUsadas);
   if (slots.personaje2) {
     var cands = candidatosSlot(PICHI.PERSONAJES, slots.personaje2);
     if (piezas.personaje) {
@@ -216,7 +255,7 @@ function sortearPiezas(ev, ctx) {
       for (var i = 0; i < cands.length; i++) if (cands[i].id !== piezas.personaje.id) sinRepe.push(cands[i]);
       if (sinRepe.length) cands = sinRepe;
     }
-    piezas.personaje2 = sortearPieza(cands, ctx.piezasUsadas);
+    piezas.personaje2 = sortearPersonaje(cands, ctx.piezasUsadas);
   }
   if (slots.complicacion) piezas.complicacion = sortearPieza(candidatosSlot(PICHI.COMPLICACIONES, slots.complicacion), ctx.piezasUsadas);
   piezas.objeto = sortearPieza(candidatosSlot(PICHI.OBJETOS_MENCION, slots.objeto || null), ctx.piezasUsadas);

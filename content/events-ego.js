@@ -27,10 +27,10 @@ PICHI.addEvents([
     { label: "Defenderte con argumentos.", efectos: { conciencia: 12, karma: -8, paranoia: 22, aguante: -12 },
       resultado: ["Tu defensa es brillante y dura cuarenta minutos y no convence a nadie porque el tribunal sos vos.",
                   "Ganás el juicio. Seguís exactamente igual de mal. Ese es el chiste."] },
-    { label: "Denunciar al tribunal por parcialidad.", efectos: { conciencia: 18, karma: 5, paranoia: 12 },
+    { label: "Denunciar al tribunal por parcialidad.", pericia: "karma", efectos: { conciencia: 18, karma: 5, paranoia: 12 },
       resultado: ["Señalás que juez, fiscal y acusado son la misma persona. El tribunal lo admite y sigue funcionando igual.",
                   "«Objeción», decís. «Denegada», decís. Y ahí te reís por primera vez en el tramo."] },
-    { label: "Pedir un abogado y esperar.", efectos: { conciencia: 15, paranoia: -12, aguante: 5 },
+    { label: "Pedir un abogado y esperar.", pericia: "karma", efectos: { conciencia: 15, paranoia: -12, aguante: 5 },
       resultado: ["Pedís asistencia. Aparece alguien que te quiere y dice tres cosas buenas de vos. El tribunal no estaba preparado para eso.",
                   "Esperás. Nadie viene. Pero mientras esperás, se te pasa, y eso también es una defensa."] }
   ]
@@ -63,7 +63,7 @@ PICHI.addEvents([
       exito: { efectos: { conciencia: 20, karma: 5, aguante: -15 }, resultado: ["No es una pelea física: es una discusión y le ganás con un solo argumento que trajiste de un evento anterior."] },
       fallo: { efectos: { conciencia: -12, aguante: -18, paranoia: 25 }, resultado: ["Te destroza con cuatro datos concretos sobre tu vida material. No hay respuesta espiritual para una boleta de luz."] },
       resultado: [] },
-    { label: "Pedirle plata.", efectos: { mangos: 900, karma: -18, conciencia: 10, paranoia: 12 },
+    { label: "Pedirle plata.", pericia: "karma", efectos: { mangos: 900, karma: -18, conciencia: 10, paranoia: 12 },
       resultado: ["Te la da sin dudar y sin condiciones, y eso es lo que te va a arruinar la semana.",
                   "«¿Cuánto?», pregunta, ya sacando la billetera. Es humillante y es útil."] }
   ]
@@ -85,16 +85,16 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Pedirle perdón sin justificarte.", efectos: { conciencia: 28, karma: 25, paranoia: -20, aguante: -8 },
+    { label: "Pedirle perdón sin justificarte.", pericia: "karma", efectos: { conciencia: 28, karma: 25, paranoia: -20, aguante: -8 },
       resultado: ["Cuatro palabras sin ningún «pero». Es lo más difícil de todo el juego y lo hiciste.",
                   "«Perdoname. No hay excusa.» Se queda mirándote. Después asiente. Se va liviano y vos también."] },
-    { label: "Explicarle por qué no fuiste.", efectos: { conciencia: 8, karma: -12, paranoia: 20 },
+    { label: "Explicarle por qué no fuiste.", pericia: "karma", efectos: { conciencia: 8, karma: -12, paranoia: 20 },
       resultado: ["La explicación es correcta, ordenada y completa. No sirve para nada. Nunca sirvió para nada.",
                   "Hablás cuatro minutos. Cuando terminás, dice: «ya sé. Igual te llamé»."] },
     { label: "Prometerle que la próxima vas.", efectos: { conciencia: 12, karma: 8, paranoia: 5 }, flags: { set: ["promesa_concreta"] },
       resultado: ["Prometés. La promesa es real esta vez y el juego lo va a verificar más adelante.",
                   "«La próxima voy», decís. Se ríe sin alegría. «Bueno.»"] },
-    { label: "Decirle que no era tu responsabilidad.", efectos: { conciencia: -10, karma: -22, paranoia: 22 },
+    { label: "Decirle que no era tu responsabilidad.", pericia: "karma", efectos: { conciencia: -10, karma: -22, paranoia: 22 },
       resultado: ["Lo decís y es parcialmente cierto y te deja peor que si hubiera sido totalmente falso.",
                   "Se da vuelta y se va sin contestarte. Esa espalda te va a durar el resto de la run."] }
   ]
@@ -151,10 +151,10 @@ PICHI.addEvents([
     { label: "Sentarte al lado y quedarte.", efectos: { conciencia: 30, karma: 22, paranoia: -25, aguante: -8 },
       resultado: ["Te sentás. No hablás. Le pones la mano en la espalda. Se duerme en cuatro minutos y vos llorás en silencio.",
                   "Te quedás hasta que se duerme. Era todo. Eso era todo lo que había que hacer y nadie lo hizo."] },
-    { label: "Explicarle cómo termina todo.", efectos: { conciencia: 15, karma: -10, paranoia: 18 },
+    { label: "Explicarle cómo termina todo.", pericia: "karma", efectos: { conciencia: 15, karma: -10, paranoia: 18 },
       resultado: ["Le contás el futuro. Es información que no le sirve para nada y que le arruina esta noche.",
                   "Le decís la verdad. Un chico de siete no necesitaba la verdad: necesitaba compañía."] },
-    { label: "Pedirle perdón.", efectos: { conciencia: 25, karma: 18, paranoia: -12 },
+    { label: "Pedirle perdón.", pericia: "karma", efectos: { conciencia: 25, karma: 18, paranoia: -12 },
       resultado: ["Le pedís perdón por lo que hiciste con lo que él te dio. Te mira sin entender. Igual sirve.",
                   "«Perdón», decís. «¿Por qué?», pregunta. Y no le podés contestar, y ahí está la respuesta."] },
     { label: "Salir y cerrar la puerta.", efectos: { conciencia: 8, karma: -15, paranoia: 25 },
@@ -183,7 +183,7 @@ PICHI.addEvents([
     { label: "Firmar el acuerdo de convivencia.", efectos: { conciencia: 25, karma: 8, paranoia: -20 }, flags: { set: ["pacto_con_ego"] },
       resultado: ["Firman. Vos manejás y él va de acompañante y avisa los pozos. Es la solución adulta y nadie la enseña.",
                   "Acuerdan reglas: él opina, vos decidís. Funciona. Es todo lo que se podía lograr."] },
-    { label: "Exigir la rendición total.", efectos: { conciencia: 15, paranoia: 25, aguante: -15 },
+    { label: "Exigir la rendición total.", pericia: "karma", efectos: { conciencia: 15, paranoia: 25, aguante: -15 },
       resultado: ["Exigís que se vaya para siempre. Se ríe. «Cuando yo me vaya, no queda nadie», dice. Y tiene razón técnica.",
                   "La rendición total no está en el menú. Perdés cuatro horas descubriéndolo."] },
     { label: "Entregarle el volante y descansar.", efectos: { conciencia: -15, karma: -12, paranoia: -25, mangos: 500 },
@@ -211,16 +211,16 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Escuchar a los catorce.", efectos: { conciencia: 30, karma: 20, aguante: -20, paranoia: 15 },
+    { label: "Escuchar a los catorce.", pericia: "conciencia", efectos: { conciencia: 30, karma: 20, aguante: -20, paranoia: 15 },
       resultado: ["Catorce frases. La cuarta y la novena te parten. Al terminar estás vaciado y liviano y ese es el precio correcto.",
                   "Aguantás las catorce sin interrumpir. Cuando termina la última, se van todos sin despedirse. Está bien así."] },
-    { label: "Escuchar solo a los primeros tres y cortar.", efectos: { conciencia: 15, karma: 5, paranoia: 18 },
+    { label: "Escuchar solo a los primeros tres y cortar.", pericia: "conciencia", efectos: { conciencia: 15, karma: 5, paranoia: 18 },
       resultado: ["Cortás en el cuarto. Los otros diez se quedan ahí, esperando, por el resto de la run.",
                   "Tres alcanzan para entender el patrón. No alcanzan para lo otro."] },
-    { label: "Pedir que aparezcan también los que te lastimaron a vos.", efectos: { conciencia: 22, karma: 5, paranoia: 20 },
+    { label: "Pedir que aparezcan también los que te lastimaron a vos.", pericia: "karma", efectos: { conciencia: 22, karma: 5, paranoia: 20 },
       resultado: ["Aparecen. Son más. La sala se llena. Es un empate horrible y es, técnicamente, la verdad.",
                   "«También quiero la otra lista», pedís. Te la dan. Es más larga y no te consuela."] },
-    { label: "Ofrecerte a reparar algo concreto con uno.", efectos: { conciencia: 25, karma: 25, paranoia: -18 }, flags: { set: ["repara"] },
+    { label: "Ofrecerte a reparar algo concreto con uno.", pericia: "karma", efectos: { conciencia: 25, karma: 25, paranoia: -18 }, flags: { set: ["repara"] },
       resultado: ["Elegís uno, el más reparable, y te comprometés a algo específico. Los otros trece asienten. Eso alcanza.",
                   "No podés con catorce. Podés con uno. Empezás por uno. Es la única forma que funcionó nunca."] }
   ]
@@ -248,7 +248,7 @@ PICHI.addEvents([
     { label: "Tocar el agua para romper el reflejo.", efectos: { conciencia: 15, paranoia: -18, aguante: -5 },
       resultado: ["Metés la mano. Se deshace todo en círculos. Cuando se calma, estás.",
                   "Rompés el espejo con dos dedos. Volvés a existir. Fue barato."] },
-    { label: "Meterte al agua.", efectos: { conciencia: 28, paranoia: 22, aguante: -15 },
+    { label: "Meterte al agua.", pericia: "aguante", efectos: { conciencia: 28, paranoia: 22, aguante: -15 },
       resultado: ["Entrás. Es tibia. Desde adentro, hacia arriba, se ve una cara asomada y es la tuya.",
                   "Te metés hasta el pecho y sentís por cuatro segundos que no tenés cuerpo, y esos cuatro segundos son el juego entero."] },
     { label: "Traer a alguien para que mire con vos.", efectos: { conciencia: 20, karma: 15, paranoia: -15 },
@@ -279,7 +279,7 @@ PICHI.addEvents([
     { label: "Quedártela.", efectos: { conciencia: -8, karma: -8, paranoia: -20, aguante: 8 }, flags: { set: ["ultima_excusa"] },
       resultado: ["Te la guardás. Es cómodo. Vas a llegar menos lejos y vas a llegar más entero, y esa es una decisión válida.",
                   "«La necesito», decís. Nadie te la va a discutir. Es tuya."] },
-    { label: "Separar la parte cierta de la parte falsa.", efectos: { conciencia: 28, karma: 12, paranoia: 8 },
+    { label: "Separar la parte cierta de la parte falsa.", pericia: "conciencia", efectos: { conciencia: 28, karma: 12, paranoia: 8 },
       resultado: ["Trabajo fino de cuarenta minutos. Queda un hecho verdadero y chico, y se cae toda la construcción alrededor.",
                   "Hacés la disección. Lo cierto pesa el diez por ciento de lo que pesaba el paquete. Con eso se puede vivir."] },
     { label: "Regalársela a otro.", efectos: { conciencia: 12, karma: -20, paranoia: 12 },

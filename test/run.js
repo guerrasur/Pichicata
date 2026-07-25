@@ -347,6 +347,156 @@ grupo("las cinco muertes son alcanzables", () => {
   info(`con Naloxona: ${salvadas} rescates, ${muertesEfecto} sobredosis igual`);
 });
 
+grupo("el dado", () => {
+  const P = cargar();
+  const D = P.Dados;
+
+  // la matemática del modificador
+  afirmar(D.modificador("aguante", 50, 50) === 0, "stat igual a la dificultad da modificador 0",
+    `da ${D.modificador("aguante", 50, 50)}`);
+  afirmar(D.modificador("aguante", 90, 50) > 0 && D.modificador("aguante", 10, 50) < 0,
+    "el modificador sigue el signo de la diferencia");
+  afirmar(Math.abs(D.modificador("aguante", 100, 0)) <= 6 && Math.abs(D.modificador("karma", -100, 100)) <= 6,
+    "el modificador está topado en ±6 (el dado nunca deja de importar)",
+    "el modificador se escapa del tope: una tirada puede volverse automática");
+
+  // 50% con modificador 0 es la promesa del diseño
+  afirmar(Math.abs(D.probabilidad(0) - 0.5) < 0.01, "con modificador 0 la tirada es una moneda al aire",
+    `da ${D.probabilidad(0)}`);
+  afirmar(D.probabilidad(6) < 1 && D.probabilidad(-6) > 0,
+    "ni el mejor preparado tiene garantía ni el más roto tiene imposible",
+    "hay modificadores que vuelven la tirada automática");
+
+  // frecuencia empírica de crítico y pifia
+  let criticos = 0, pifias = 0, exitos = 0;
+  const N = 20000;
+  for (let i = 0; i < N; i++) {
+    const t = D.tirar("aguante", 50, 50, 0);
+    if (t.grado === "critico") criticos++;
+    if (t.grado === "pifia") pifias++;
+    if (t.exito) exitos++;
+  }
+  const pc = criticos / N, pp = pifias / N, pe = exitos / N;
+  afirmar(Math.abs(pc - 0.05) < 0.01, `el crítico sale ~5% (${(pc * 100).toFixed(1)}%)`,
+    `frecuencia de crítico rara: ${(pc * 100).toFixed(1)}%`);
+  afirmar(Math.abs(pp - 0.05) < 0.01, `la pifia sale ~5% (${(pp * 100).toFixed(1)}%)`,
+    `frecuencia de pifia rara: ${(pp * 100).toFixed(1)}%`);
+  afirmar(Math.abs(pe - D.probabilidad(0)) < 0.02,
+    "la probabilidad que se le muestra al jugador coincide con la realidad",
+    `se muestra ${D.probabilidad(0)} y sale ${pe.toFixed(3)}: el pronóstico miente`);
+
+  // la ventaja tiene que servir para algo
+  let conVentaja = 0;
+  for (let i = 0; i < 5000; i++) if (D.tirar("aguante", 50, 50, 1).exito) conVentaja++;
+  afirmar(conVentaja / 5000 > pe, "la ventaja mejora la tirada de verdad",
+    "la ventaja no cambia nada");
+
+  // la escala premia y castiga en la dirección correcta
+  const buenos = D.aplicarEscala({ conciencia: 20, paranoia: 20 }, "critico");
+  afirmar(buenos.conciencia > 20 && buenos.paranoia < 20,
+    "en un crítico lo bueno rinde más y lo malo pega menos",
+    `crítico mal escalado: ${JSON.stringify(buenos)}`);
+  const malos = D.aplicarEscala({ conciencia: 20, paranoia: 20 }, "pifia");
+  afirmar(malos.conciencia < 20 && malos.paranoia > 20,
+    "en una pifia lo bueno se cae y lo malo se agrava",
+    `pifia mal escalada: ${JSON.stringify(malos)}`);
+  afirmar(D.esBueno("paranoia", -10) && D.esBueno("efecto", -10) && D.esBueno("aguante", 10),
+    "sabe qué stats conviene bajar y cuáles subir",
+    "confunde qué es bueno para el jugador");
+
+  // cobertura: el dado tiene que aparecer seguido pero no en todo
+  let ops = 0, conDado = 0;
+  const porStat = {};
+  const STATS = P.STATS.map(s => s.id);
+  for (const e of P.EVENTS.concat([P.EVENTO_ASCENSO])) {
+    for (const o of e.opciones) {
+      ops++;
+      const spec = P.dadoDeOpcion(o);
+      if (!spec) continue;
+      conDado++;
+      porStat[spec.stat] = (porStat[spec.stat] || 0) + 1;
+      if (!STATS.includes(spec.stat)) mal(`${e.id}: tirada con stat inexistente "${spec.stat}"`);
+      if (spec.tipo === "pericia" && !o.efectos) {
+        mal(`${e.id}: "${o.label}" tiene pericia pero no tiene efectos que escalar`);
+      }
+    }
+  }
+  const pct = conDado / ops * 100;
+  info(`${conDado}/${ops} opciones se juegan con dado (${pct.toFixed(0)}%) · ${JSON.stringify(porStat)}`);
+  afirmar(pct >= 30, `el dado aparece en ${pct.toFixed(0)}% de las opciones`,
+    `el dado casi no aparece: ${pct.toFixed(0)}%`);
+  afirmar(pct <= 70, "todavía hay opciones sin dado (el contraste es lo que hace que el dado importe)",
+    `el dado está en todas partes (${pct.toFixed(0)}%): deja de ser una apuesta y pasa a ser ruido`);
+
+  const porEvento = P.EVENTS.map(e => e.opciones.filter(o => P.dadoDeOpcion(o)).length);
+  const todasTiran = porEvento.filter((n, i) => n > 0 && n === P.EVENTS[i].opciones.length).length;
+  info(`promedio ${(porEvento.reduce((a, b) => a + b, 0) / porEvento.length).toFixed(1)} dados por evento · ` +
+    `${porEvento.filter(n => n === 0).length} eventos sin dado · ${todasTiran} donde todas tiran`);
+
+  // el pronóstico se le muestra al jugador antes de elegir
+  P.nuevaRun();
+  const conPreview = P.run.evento.opciones.filter(o => o.dado).length;
+  const conSpec = P.run.evento.opciones.filter(o => o.disponible && P.dadoDeOpcion(o.ref)).length;
+  afirmar(conPreview === conSpec,
+    "cada opción con dado muestra su pronóstico antes de elegir",
+    `${conSpec} opciones tiran y solo ${conPreview} lo avisan: el riesgo sería sorpresa y no decisión`);
+});
+
+grupo("el elenco de la run", () => {
+  const P = cargar();
+  desbloquearTodo(P);
+
+  P.nuevaRun();
+  const elenco = P.elencoDeLaRun();
+  afirmar(elenco.length === P.FRANJAS_ELENCO.length,
+    `la run arranca con un elenco de ${elenco.length}`,
+    `el elenco quedó en ${elenco.length} de ${P.FRANJAS_ELENCO.length}`);
+  info("elenco de ejemplo: " + elenco.map(g => g.pieza.nombre).join(" · "));
+
+  /* Nadie del plano astral puede ser "gente del viaje". Se chequea sobre varias
+     runs porque el elenco se sortea: con una sola muestra el bug se escapa. */
+  const fugasAstrales = new Set();
+  for (let i = 0; i < 30; i++) {
+    P.nuevaRun();
+    for (const g of P.elencoDeLaRun()) {
+      const t = g.pieza.tags || [];
+      if (t.includes("astral") || t.includes("ego")) fugasAstrales.add(g.pieza.id);
+    }
+  }
+  afirmar(fugasAstrales.size === 0,
+    "el elenco nunca incluye piezas del plano astral (30 runs)",
+    "piezas astrales en el elenco: " + [...fugasAstrales].join(", "));
+
+  // franjas distintas: un chanta, alguien de la calle, alguien que te cuida
+  const ids = elenco.map(g => g.pieza.id);
+  afirmar(new Set(ids).size === ids.length, "el elenco no repite a la misma persona",
+    "el elenco tiene duplicados");
+
+  // el elenco tiene que VOLVER, y a la vez tiene que haber caras nuevas
+  const cobertura = [], distintos = [];
+  for (let i = 0; i < 40; i++) {
+    const r = jugarRun(P, ESTRATEGIAS.azar);
+    const enc = r.encuentros || {};
+    const total = Object.values(enc).reduce((a, b) => a + b, 0);
+    if (!total) continue;
+    cobertura.push((r.elenco || []).reduce((a, id) => a + (enc[id] || 0), 0) / total);
+    distintos.push(Object.keys(enc).length);
+  }
+  const prom = a => a.reduce((x, y) => x + y, 0) / a.length;
+  const cob = prom(cobertura) * 100;
+  info(`el elenco cubre el ${cob.toFixed(0)}% de las apariciones · ${prom(distintos).toFixed(1)} personas distintas por run`);
+  afirmar(cob >= 35, `el elenco vuelve a aparecer (${cob.toFixed(0)}% de las apariciones)`,
+    `el elenco casi no vuelve (${cob.toFixed(0)}%): los turnos siguen sueltos`);
+  afirmar(cob <= 85, "sigue apareciendo gente nueva además del elenco",
+    `el elenco copa todo (${cob.toFixed(0)}%): el mundo se siente vacío`);
+
+  // el elenco se sortea de nuevo en cada run: la continuidad es interna
+  const elencos = new Set();
+  for (let i = 0; i < 15; i++) { P.nuevaRun(); elencos.add((P.run.elenco || []).join("|")); }
+  afirmar(elencos.size >= 8, `el elenco cambia entre runs (${elencos.size} elencos distintos en 15)`,
+    `el elenco se repite entre runs (${elencos.size} distintos en 15): la variedad entre partidas se pierde`);
+});
+
 grupo("no repetición de contenido", () => {
   const RUNS = RAPIDO ? 15 : 60;
 

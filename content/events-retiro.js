@@ -23,13 +23,13 @@ PICHI.addEvents([
     { label: "Admitir que no cumpliste nada.", efectos: { karma: 12, conciencia: 14, paranoia: -10 },
       resultado: ["Levantás la mano y decís la verdad. Se ríe medio retiro de alivio. Otros tres admiten después de vos.",
                   "«Comí milanesa anteayer», confesás. {^personaje.nombre} suspira. «Bueno. Al menos uno es honesto.»"] },
-    { label: "Mentir como todos.", efectos: { karma: -8, paranoia: 12, conciencia: 3 }, flags: { set: ["mintio_dieta"] },
+    { label: "Mentir como todos.", pericia: "karma", efectos: { karma: -8, paranoia: 12, conciencia: 3 }, flags: { set: ["mintio_dieta"] },
       resultado: ["Levantás la mano con los demás. Es un pacto colectivo de silencio y funciona hasta que algo salga mal.",
                   "Mentís sin esfuerzo, que es lo que te tiene que preocupar."] },
     { label: "Preguntar para qué sirve la dieta.", efectos: { conciencia: 12, karma: 3, paranoia: 5 },
       resultado: ["La explicación tiene una parte razonable, una parte inventada y una parte que suena a que la inventó otro.",
                   "«Es para limpiar el cuerpo», dice. Insistís. La segunda explicación contradice la primera."] },
-    { label: "Delatar al que sabés que comió asado.", efectos: { karma: -15, conciencia: 5, paranoia: 15 },
+    { label: "Delatar al que sabés que comió asado.", pericia: "karma", efectos: { karma: -15, conciencia: 5, paranoia: 15 },
       resultado: ["Lo delatás y se arma un clima que va a durar todo el fin de semana. Ganaste nada.",
                   "«Él comió chorizo», decís. Once cabezas giran. Es un momento muy malo y lo generaste vos."] }
   ]
@@ -60,7 +60,7 @@ PICHI.addEvents([
     { label: "Aceptar que hoy no era, y cuidar a los demás.", efectos: { conciencia: 20, karma: 22, aguante: -12, paranoia: -12 },
       resultado: ["Pasás cuatro horas trayendo agua, sosteniendo cabezas y limpiando. Es el trabajo espiritual más real de todo el retiro.",
                   "Te convertís en enfermero de la ronda. Nadie se va a acordar mañana. Vos sí."] },
-    { label: "Fingir que te está pegando.", efectos: { karma: -12, conciencia: -5, paranoia: 18 },
+    { label: "Fingir que te está pegando.", pericia: "karma", efectos: { karma: -12, conciencia: -5, paranoia: 18 },
       resultado: ["Actuás un trance durante tres horas. Es agotador, es humillante y nadie te descubre, lo cual es lo peor.",
                   "Te sacudís, gemís, lloras a pedido. Sos bueno actuando y eso te deja pensando cosas incómodas."] },
     { label: "Salir a caminar y volver a la madrugada.", efectos: { conciencia: 14, aguante: -8, paranoia: -10 },
@@ -88,7 +88,7 @@ PICHI.addEvents([
     { label: "Ir y quedarte al lado sin hacer nada.", efectos: { conciencia: 22, karma: 20, aguante: -10, paranoia: 8 },
       resultado: ["Te sentás al lado y no hacés nada. A los veinte minutos se calma agarrándote la muñeca. Era eso.",
                   "No hablás, no toques, no expliqués. Solo estás. Es el manual completo y lo escribiste ahora."] },
-    { label: "Tomar el mando y ordenar la escena.", efectos: { conciencia: 15, karma: 15, paranoia: 12, aguante: -12 },
+    { label: "Tomar el mando y ordenar la escena.", pericia: "conciencia", efectos: { conciencia: 15, karma: 15, paranoia: 12, aguante: -12 },
       resultado: ["Pedís espacio, agua y luz baja. Funciona. {^personaje2.nombre} te lo va a agradecer sin admitir que lo necesitaba.",
                   "Organizás a cuatro personas en veinte segundos. Se resuelve. Después te tiembla la mano."] },
     { label: "Quedarte en tu lugar y no intervenir.", efectos: { conciencia: 5, karma: -8, paranoia: 18 },
@@ -119,14 +119,14 @@ PICHI.addEvents([
     { label: "Pagar el intensivo.", efectos: { mangos: -1500, conciencia: 20, karma: -5, paranoia: 8 }, flags: { set: ["pago_intensivo"] },
       resultado: ["Pagás una fortuna y es, honestamente, mucho mejor. La estafa a veces incluye el producto.",
                   "Tres cuotas. Grupo de cuatro personas. Es otra cosa. Te da rabia que sea otra cosa."] },
-    { label: "Decirle que no tenés la plata.", efectos: { conciencia: 10, karma: 8, paranoia: -5 },
+    { label: "Decirle que no tenés la plata.", pericia: "karma", efectos: { conciencia: 10, karma: 8, paranoia: -5 },
       resultado: ["Se lo decís sin vergüenza. Cambia de tema y te trata igual, lo cual lo hace un poco menos chanta de lo que pensabas.",
                   "«Bueno, cuando puedas», dice, y anota tu número, que es peor que insistir."] },
     { label: "Pedirle una beca.", efectos: { conciencia: 12, karma: 5, paranoia: 8 },
       riesgo: { prob: 0.5, efectos: { karma: -5, paranoia: 10 }, resultado: ["«No manejamos becas», dice, y en cuatro palabras te aclara todo el modelo de negocio."] },
       resultado: ["Te la da, a cambio de que ayudes en la cocina y la logística. Es el mejor trato del viaje.",
                   "Acepta a medias: mitad de precio si traés a dos. Ahora sos parte de la cadena."] },
-    { label: "Ofrecerle organizar el próximo a cambio de entrar gratis.", efectos: { mangos: 200, karma: -10, conciencia: 15 }, flags: { set: ["socio_del_chanta"] },
+    { label: "Ofrecerle organizar el próximo a cambio de entrar gratis.", pericia: "karma", efectos: { mangos: 200, karma: -10, conciencia: 15 }, flags: { set: ["socio_del_chanta"] },
       resultado: ["Le proponés un intercambio y acepta en cuatro segundos, lo que revela cuánto necesitaba a alguien que organice.",
                   "Cerrás trato. Ahora estás del otro lado del mostrador y todavía no sabés qué significa eso."] }
   ]
@@ -151,7 +151,7 @@ PICHI.addEvents([
     { label: "Ser el primero en hablar y agradecerle.", efectos: { conciencia: 20, karma: 20, paranoia: -12 },
       resultado: ["Decís cuatro palabras y alcanzan. Se rompe el hielo y después hablan todos. Hiciste lo más difícil.",
                   "«Gracias por decirlo», decís, y esa frase le cambia la noche a alguien."] },
-    { label: "Confesar algo propio del mismo tamaño.", efectos: { conciencia: 22, karma: 15, paranoia: 15 },
+    { label: "Confesar algo propio del mismo tamaño.", pericia: "karma", efectos: { conciencia: 22, karma: 15, paranoia: 15 },
       resultado: ["Contás lo tuyo. Te sale peor de lo que esperabas y mejor de lo que temías. Alguien te agarra la mano.",
                   "Se te quiebra la voz dos veces. Nadie mira el reloj."] },
     { label: "Quedarte callado.", efectos: { conciencia: 8, karma: -5, paranoia: 12 },
@@ -182,13 +182,13 @@ PICHI.addEvents([
     { label: "Ir atrás del limonero.", efectos: { aguante: 8, conciencia: 12, karma: 5, paranoia: -8 },
       resultado: ["El limonero. Cuatro personas a distintas alturas del jardín, en silencio, mirando cada uno su propio horizonte. Es un cuadro.",
                   "Volvés a lo básico de una manera literal. Hay algo purificador y hay algo humillante y son la misma cosa."] },
-    { label: "Golpear la puerta y preguntar si está bien.", efectos: { karma: 15, conciencia: 12, paranoia: 8 },
+    { label: "Golpear la puerta y preguntar si está bien.", pericia: "aguante", efectos: { karma: 15, conciencia: 12, paranoia: 8 },
       resultado: ["No contesta. Insistís. A la tercera contesta con una voz muy chiquita. Entrás y ayudás. Hiciste bien.",
                   "«¿Estás bien?» Silencio. «¿Estás bien?» «No.» Y ahí empieza lo importante."] },
-    { label: "Aguantar y esperar tu turno con dignidad.", efectos: { aguante: -12, conciencia: 10, paranoia: 12 },
+    { label: "Aguantar y esperar tu turno con dignidad.", pericia: "aguante", efectos: { aguante: -12, conciencia: 10, paranoia: 12 },
       resultado: ["Cuarenta minutos de disciplina. Ganás algo abstracto y perdés algo muy concreto.",
                   "Aguantás. Es un ejercicio espiritual válido y nadie te lo va a reconocer."] },
-    { label: "Organizar el sistema de turnos.", efectos: { karma: 18, conciencia: 14, aguante: -5 },
+    { label: "Organizar el sistema de turnos.", pericia: "conciencia", efectos: { karma: 18, conciencia: 14, aguante: -5 },
       resultado: ["Anotás nombres en un papel y lo pegás en la puerta con cinta. Catorce personas te obedecen agradecidas.",
                   "Con una lista y dos reglas resolvés el problema más urgente del retiro. La burocracia también salva."] }
   ]
@@ -243,16 +243,16 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Cantar fuerte.", efectos: { conciencia: 24, karma: 12, paranoia: 15, aguante: -8 },
+    { label: "Cantar fuerte.", pericia: "conciencia", efectos: { conciencia: 24, karma: 12, paranoia: 15, aguante: -8 },
       resultado: ["Cantás nueve minutos. Se te suman tres. Cuando termina nadie aplaude, que es la mejor respuesta posible.",
                   "Sale entera y sale bien. Al día siguiente no la vas a poder reconstruir y eso está bien."] },
-    { label: "Cantarla bajito solo para vos.", efectos: { conciencia: 18, paranoia: -12 },
+    { label: "Cantarla bajito solo para vos.", pericia: "conciencia", efectos: { conciencia: 18, paranoia: -12 },
       resultado: ["La cantás en un susurro, para adentro. Nadie la escucha. No pierde nada por eso.",
                   "Se te queda una parte. Vas a tararearla en un colectivo en tres meses y se te van a llenar los ojos."] },
     { label: "Tragártela.", efectos: { conciencia: 5, paranoia: 20, karma: -5 },
       resultado: ["Cerrás la boca y aguantás. Se va. Se va del todo. Vas a pensar en esto muchas veces.",
                   "La vergüenza gana por dos a cero. Es una derrota vieja y conocida."] },
-    { label: "Grabarla con el celular.", efectos: { conciencia: 10, karma: -5, paranoia: 10 },
+    { label: "Grabarla con el celular.", pericia: "karma", efectos: { conciencia: 10, karma: -5, paranoia: 10 },
       resultado: ["Grabás cuarenta segundos. Mañana los vas a escuchar y va a ser un tipo desafinado gimiendo. Y aun así los vas a guardar.",
                   "El audio queda. El audio nunca es lo que pasó."] }
   ]
@@ -280,10 +280,10 @@ PICHI.addEvents([
     { label: "Quedarte a ayudarla en silencio.", efectos: { conciencia: 25, karma: 20, aguante: -8, paranoia: -18 },
       resultado: ["Dos horas pelando en silencio al lado de ella. No pasa nada. Pasa todo. No te va a poder explicar esto a nadie.",
                   "Te pasa el cuchillo sin decir nada. Trabajan hasta que se hace de noche."] },
-    { label: "Contarle todo tu proceso.", efectos: { conciencia: 12, karma: 5, paranoia: 8 },
+    { label: "Contarle todo tu proceso.", pericia: "karma", efectos: { conciencia: 12, karma: 5, paranoia: 8 },
       resultado: ["Hablás catorce minutos. Cuando terminás dice «mmm». Ese «mmm» es un diagnóstico completo y no es bueno.",
                   "Te escucha entero. «Mucha palabra», dice al final. Y no hay forma de discutirlo."] },
-    { label: "Ofrecerle plata por una sesión privada.", efectos: { mangos: -300, karma: -15, conciencia: 5, paranoia: 12 },
+    { label: "Ofrecerle plata por una sesión privada.", pericia: "karma", efectos: { mangos: -300, karma: -15, conciencia: 5, paranoia: 12 },
       resultado: ["Se ríe por primera y única vez. No te acepta la plata. Te trata mejor después, extrañamente.",
                   "«Yo no hago eso», dice, y se levanta y se va. Perdiste algo que estaba servido."] }
   ]
@@ -400,7 +400,7 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Sacarlos de la ronda y dejarlos hablar solos.", efectos: { karma: 18, conciencia: 15, aguante: -8 },
+    { label: "Sacarlos de la ronda y dejarlos hablar solos.", pericia: "aguante", efectos: { karma: 18, conciencia: 15, aguante: -8 },
       resultado: ["Los llevás a un patio y te vas. Hablan tres horas. No vas a saber cómo terminó y no es tu asunto.",
                   "«Vayan afuera», decís. Es la intervención más útil y la menos memorable."] },
     { label: "Darles tu opinión sincera.", efectos: { conciencia: 12, karma: -8, paranoia: 12 },

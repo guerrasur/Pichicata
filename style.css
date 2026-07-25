@@ -282,3 +282,56 @@ footer span { color: var(--acento); letter-spacing: 0.1em; }
   .logo { font-size: 6px; }
   .stat-label { width: 8ch; }
 }
+
+/* ---------- el dado ---------- */
+
+.dado-previo {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 5px;
+  font-size: 0.74rem;
+  color: var(--tenue);
+  border: 1px solid var(--borde);
+  white-space: nowrap;
+}
+.opcion.con-dado:hover .dado-previo,
+.opcion.con-dado:focus-visible .dado-previo { color: var(--acento); border-color: var(--acento); }
+
+.tirada {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  border: var(--linea);
+  padding: 7px 10px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  background: var(--fondo);
+}
+.tirada-icono { font-size: 1.25rem; line-height: 1; }
+.tirada-cuenta strong { color: var(--texto); font-weight: normal; }
+.tirada-grado {
+  margin-left: auto;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+}
+.tirada.exito { border-color: var(--bien); }
+.tirada.exito .tirada-grado { color: var(--bien); }
+.tirada.fallo { border-color: var(--mal); }
+.tirada.fallo .tirada-grado { color: var(--mal); }
+.tirada.critico { border-color: var(--acento); background: var(--fondo-2); }
+.tirada.critico .tirada-grado, .tirada.critico .tirada-icono { color: var(--acento); }
+.tirada.pifia { border-color: var(--mal); background: var(--fondo-2); }
+.tirada.pifia .tirada-grado, .tirada.pifia .tirada-icono { color: var(--mal); }
+
+/* ---------- el elenco de la run ---------- */
+
+.elenco {
+  font-size: 0.75rem;
+  color: var(--tenue);
+  margin-top: 6px;
+  border-top: var(--linea);
+  padding-top: 5px;
+}
+.elenco .conocido { color: var(--texto); }
+.elenco .por-conocer { opacity: 0.5; }

@@ -12,9 +12,11 @@ const RAIZ = path.join(__dirname, "..");
    agregalo en los dos lados o las pruebas no lo van a ver. */
 const ARCHIVOS = [
   "js/state.js",
+  "js/dados.js",
   "js/content-engine.js",
   "content/pieces.js",
   "content/ascii.js",
+  "content/dados-textos.js",
   "content/unlocks.js",
   "content/characters.js",
   "content/endings.js",

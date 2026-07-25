@@ -25,6 +25,53 @@ PICHI.nombreTramo = function (n) {
   return d.nombre;
 };
 
+/* ================= el elenco de la run ================= */
+
+/* Tres personas que van a volver a aparecer. Se sortea una de cada franja para
+   que el viaje tenga un chanta, alguien de la calle y alguien que te cuida, en
+   vez de tres versiones de lo mismo. Se excluyen las piezas del plano astral:
+   esas aparecen cuando aparecen y no son "gente del viaje". */
+PICHI.FRANJAS_ELENCO = [
+  ["guru", "chanta", "ritual"],
+  ["lumpen", "social", "joven", "comercio", "quimico", "musico"],
+  ["cuidadora", "familia", "veterano", "testigo", "autentico", "animal"]
+];
+
+PICHI.armarElenco = function () {
+  var disponibles = PICHI.piezasDisponibles(PICHI.PERSONAJES);
+  var elenco = [], i, j;
+
+  for (i = 0; i < PICHI.FRANJAS_ELENCO.length; i++) {
+    var franja = PICHI.FRANJAS_ELENCO[i], cands = [];
+    for (j = 0; j < disponibles.length; j++) {
+      var p = disponibles[j], tags = p.tags || [];
+      if (elenco.indexOf(p.id) !== -1) continue;
+      /* Fuera cualquier pieza del plano astral, no solo las exclusivas: un
+         jaguar que te acompaña todo el viaje por el conurbano no es un elenco,
+         es un error. El perro de la calle sí, que es otra cosa. */
+      if (!tags.length || tags.indexOf("astral") !== -1 || tags.indexOf("ego") !== -1) continue;
+      for (k = 0; k < franja.length; k++) if (tags.indexOf(franja[k]) !== -1) { cands.push(p); break; }
+    }
+    if (cands.length) elenco.push(PICHI.pick(cands).id);
+  }
+  return elenco;
+};
+
+PICHI.elencoDeLaRun = function () {
+  var out = [], i;
+  if (!PICHI.run || !PICHI.run.elenco) return out;
+  for (i = 0; i < PICHI.run.elenco.length; i++) {
+    var id = PICHI.run.elenco[i];
+    for (var j = 0; j < PICHI.PERSONAJES.length; j++) {
+      if (PICHI.PERSONAJES[j].id === id) {
+        out.push({ pieza: PICHI.PERSONAJES[j], encuentros: (PICHI.run.encuentros || {})[id] || 0 });
+        break;
+      }
+    }
+  }
+  return out;
+};
+
 /* ================= arranque ================= */
 
 PICHI.nuevaRun = function () {
@@ -50,12 +97,17 @@ PICHI.nuevaRun = function () {
     ojoUsado: false,
     via: (PICHI.tieneUnlock("D1") && PICHI.chance(0.5)) ? "norte" : "clasico",
     via3: (PICHI.tieneUnlock("D2") && PICHI.chance(0.5)) ? "sotano" : "clasico",
+    elenco: [],
+    encuentros: {},
     evento: null,
     fase: "evento",
     resolucion: null,
     fin: null,
     marcas: { maxConciencia: stats.conciencia, maxMangos: stats.mangos, efectoSiempreCero: stats.efecto === 0, paranoiaAlta: false, decisiones: 0 }
   };
+
+  // el elenco tiene que existir antes del primer evento
+  PICHI.run.elenco = PICHI.armarElenco();
 
   // el encendedor arranca la run con material
   if (PICHI.tieneUnlock("C4")) { PICHI.run.reliquias.push("C4"); PICHI.run.flags.tiene_faso = true; }
@@ -181,6 +233,8 @@ PICHI.decorarOpciones = function (evento) {
 
   for (var i = 0; i < ops.length; i++) {
     ops[i].spoiler = (verTodos || i === idxSpoiler) ? PICHI.resumenEfectos(ops[i].ref) : null;
+    // el dado SIEMPRE se muestra antes de elegir: el riesgo es información, no sorpresa
+    ops[i].dado = ops[i].disponible === false ? null : PICHI.pronosticoDeOpcion(ops[i].ref);
   }
   return ops;
 };
@@ -216,11 +270,86 @@ function modular(id, valor, opRef) {
   return valor;
 }
 
-function tiradaProb(t, stats) {
-  var v = stats[t.stat];
-  var d = (typeof t.dificultad === "number") ? t.dificultad : 50;
-  var p = t.invertido ? 0.5 + (d - v) / 100 : 0.5 + (v - d) / 100;
-  return Math.max(0.12, Math.min(0.9, p));
+/* Con qué se defiende cada tipo de situación cuando el contenido no lo dice. */
+PICHI.STAT_POR_CATEGORIA = {
+  combate: "aguante",
+  dialogo: "karma",
+  comercio: "karma",
+  trip: "conciencia",
+  ritual: "conciencia",
+  descanso: "aguante",
+  ruta: "aguante",
+  final: "conciencia"
+};
+
+/* ¿Esta opción se juega con dado, y con qué stat contra qué dificultad?
+   Unifica las tres formas: pericia (ejecución), riesgo (complicación) y tirada
+   (dos ramas narrativas). Devuelve null si la opción es determinística. */
+PICHI.dadoDeOpcion = function (op) {
+  if (!op) return null;
+
+  if (op.tirada) {
+    var t = op.tirada;
+    // `invertido` significaba "conviene tener el stat BAJO" (ej: Efecto)
+    return {
+      tipo: "tirada",
+      stat: t.stat,
+      dificultad: t.dificultad,
+      invertido: !!t.invertido
+    };
+  }
+
+  if (op.pericia) {
+    return { tipo: "pericia", stat: op.pericia, dificultad: op.cd || 50, invertido: false };
+  }
+
+  /* Los riesgos venían como una probabilidad fija y oculta. Se convierten en una
+     tirada visible sin tocar el contenido: la probabilidad se traduce a una
+     dificultad y el stat se deduce de la categoría del evento, porque regatear
+     no se defiende con el cuerpo y una pelea no se defiende con labia. */
+  if (op.riesgo) {
+    var cat = (PICHI.run && PICHI.run.evento) ? PICHI.run.evento.categoria : null;
+    var stat = op.riesgo.stat || PICHI.STAT_POR_CATEGORIA[cat] || "aguante";
+    // prob de que salga MAL. 0.5 -> dificultad = tu stat (moneda al aire)
+    var dif = 50 + Math.round((op.riesgo.prob - 0.5) * 60);
+    return { tipo: "riesgo", stat: stat, dificultad: dif, invertido: false };
+  }
+
+  return null;
+};
+
+/* Valor efectivo del stat para la tirada, respetando `invertido`. */
+function valorParaDado(spec, stats) {
+  var v = stats[spec.stat];
+  if (typeof v !== "number") v = 50;
+  if (spec.invertido) {
+    // con Efecto alto tirás peor: el valor se invierte sobre su propio rango
+    var def = null;
+    for (var i = 0; i < PICHI.STATS.length; i++) if (PICHI.STATS[i].id === spec.stat) def = PICHI.STATS[i];
+    var max = def ? def.max : 100, min = def ? def.min : 0;
+    v = max - (v - min);
+  }
+  return v;
+}
+
+PICHI.pronosticoDeOpcion = function (op) {
+  var spec = PICHI.dadoDeOpcion(op);
+  if (!spec) return null;
+  var v = valorParaDado(spec, PICHI.run.stats);
+  return {
+    spec: spec,
+    etiqueta: PICHI.Dados.pronostico(spec.stat, v, spec.dificultad),
+    mod: PICHI.Dados.modificador(spec.stat, v, spec.dificultad)
+  };
+};
+
+/* La ventaja viene de las reliquias y del personaje. */
+function ventajaDelDado(spec) {
+  var v = 0;
+  if (PICHI.tieneReliquiaEnRun("C6")) v += 1;                       // la Libreta te deja leer la situación
+  if (spec.stat === "paranoia" && PICHI.run.pasiva === "doctora") v += 1;
+  if (PICHI.run.stats.efecto >= 70 && spec.stat !== "conciencia") v -= 1;   // muy dado vuelta, peor pulso
+  return Math.max(-1, Math.min(1, v));
 }
 
 PICHI.elegirOpcion = function (indice) {
@@ -253,27 +382,67 @@ PICHI.elegirOpcion = function (indice) {
   var base = PICHI.resolverTexto(op.resultado, piezas);
   if (base) textos.push(base);
 
-  // 4. tirada
-  if (op.tirada) {
-    var p = tiradaProb(op.tirada, PICHI.run.stats);
-    var exito = PICHI.chance(p);
-    var rama = exito ? op.exito : op.fallo;
-    notas.push((exito ? "✓" : "✗") + " tirada de " + op.tirada.stat + " (" + Math.round(p * 100) + "%)");
-    if (rama) {
-      if (rama.efectos) for (k in rama.efectos) aplicarDelta(deltas, k, modular(k, rama.efectos[k], op));
-      var t = PICHI.resolverTexto(rama.resultado, piezas);
-      if (t) textos.push(t);
-      if (rama.flags) aplicarFlags(rama.flags);
-    }
-  }
+  /* 4. EL DADO. Una sola tirada por decisión: se muestra, se aplica y se narra.
+        Según el tipo, la misma tirada significa cosas distintas:
+          tirada  -> elige entre dos ramas narrativas escritas
+          riesgo  -> fallar hace aparecer la complicación
+          pericia -> escala los efectos de la propia acción */
+  var tirada = null;
+  var spec = PICHI.dadoDeOpcion(op);
+  if (spec) {
+    var valor = valorParaDado(spec, PICHI.run.stats);
+    tirada = PICHI.Dados.tirar(spec.stat, valor, spec.dificultad, ventajaDelDado(spec));
+    tirada.tipo = spec.tipo;
 
-  // 5. riesgo
-  if (op.riesgo && PICHI.chance(op.riesgo.prob)) {
-    notas.push("✗ salió el riesgo (" + Math.round(op.riesgo.prob * 100) + "%)");
-    if (op.riesgo.efectos) for (k in op.riesgo.efectos) aplicarDelta(deltas, k, modular(k, op.riesgo.efectos[k], op));
-    var tr = PICHI.resolverTexto(op.riesgo.resultado, piezas);
-    if (tr) textos.push(tr);
-    if (op.riesgo.flags) aplicarFlags(op.riesgo.flags);
+    if (spec.tipo === "tirada") {
+      var rama = tirada.exito ? op.exito : op.fallo;
+      if (rama) {
+        var efR = rama.efectos || {};
+        // el crítico y la pifia amplifican la rama que tocó
+        if (tirada.grado === "critico" || tirada.grado === "pifia") {
+          efR = PICHI.Dados.aplicarEscala(efR, tirada.grado);
+        }
+        for (k in efR) aplicarDelta(deltas, k, modular(k, efR[k], op));
+        var t = PICHI.resolverTexto(rama.resultado, piezas);
+        if (t) textos.push(t);
+        if (rama.flags) aplicarFlags(rama.flags);
+      }
+      if (tirada.grado === "critico" || tirada.grado === "pifia") {
+        textos.push(PICHI.textoDado(tirada.grado, PICHI.run.evento.categoria));
+      }
+    } else if (spec.tipo === "riesgo") {
+      if (!tirada.exito) {
+        var efRi = op.riesgo.efectos || {};
+        if (tirada.grado === "pifia") efRi = PICHI.Dados.aplicarEscala(efRi, "pifia");
+        for (k in efRi) aplicarDelta(deltas, k, modular(k, efRi[k], op));
+        var tr = PICHI.resolverTexto(op.riesgo.resultado, piezas);
+        if (tr) textos.push(tr);
+        if (op.riesgo.flags) aplicarFlags(op.riesgo.flags);
+      } else if (tirada.grado === "critico") {
+        textos.push(PICHI.textoDado("critico", PICHI.run.evento.categoria));
+        // en un crítico, lo bueno de la acción rinde más
+        for (k in (op.efectos || {})) {
+          var extra = PICHI.Dados.esBueno(k, op.efectos[k]) ? Math.round(op.efectos[k] * 0.5) : 0;
+          if (extra) aplicarDelta(deltas, k, modular(k, extra, op));
+        }
+      }
+    } else if (spec.tipo === "pericia") {
+      /* Los efectos base ya se aplicaron en el paso 1. Acá se corrige la
+         diferencia entre lo aplicado y lo que corresponde según cómo salió. */
+      var escalados = PICHI.Dados.aplicarEscala(op.efectos || {}, tirada.grado);
+      for (k in escalados) {
+        var diferencia = escalados[k] - (op.efectos[k] || 0);
+        if (diferencia) aplicarDelta(deltas, k, modular(k, diferencia, op));
+      }
+      if (tirada.grado !== "exito") {
+        textos.push(PICHI.textoDado(tirada.grado, PICHI.run.evento.categoria));
+      }
+    }
+
+    notas.push(PICHI.Dados.nombreGrado(tirada.grado) + " · " + PICHI.Dados.etiqueta(tirada));
+    PICHI.run.marcas.tiradas = (PICHI.run.marcas.tiradas || 0) + 1;
+    if (tirada.grado === "critico") PICHI.run.marcas.criticos = (PICHI.run.marcas.criticos || 0) + 1;
+    if (tirada.grado === "pifia") PICHI.run.marcas.pifias = (PICHI.run.marcas.pifias || 0) + 1;
   }
 
   // 6. flags
@@ -299,7 +468,10 @@ PICHI.elegirOpcion = function (indice) {
     return;
   }
 
-  PICHI.run.resolucion = { textos: textos, deltas: deltas, notas: notas, reliquia: reliquia ? reliquia.nombre : null, label: opt.label };
+  PICHI.run.resolucion = {
+    textos: textos, deltas: deltas, notas: notas, tirada: tirada,
+    reliquia: reliquia ? reliquia.nombre : null, label: opt.label
+  };
   PICHI.run.fase = "resolucion";
   PICHI.saveRun();
   PICHI.UI.render();

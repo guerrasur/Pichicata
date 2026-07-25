@@ -83,6 +83,52 @@ Categorías de evento: `dialogo`, `trip`, `combate`, `descanso`, `comercio`, `ru
 
 ---
 
+## El dado
+
+Algunas acciones se pueden ejecutar bien o mal, y esas muestran su tirada **antes** de que
+elijas (`⚄ d20 +2 AGU · 65%`): el riesgo tiene que ser información con la que decidís, no
+una sorpresa que te enterás después. Se tira un d20 más un modificador que sale de cuánto
+te sobra del stat que la acción pide, y hay que llegar a 11.
+
+El **20 es crítico** y el **1 es pifia**, siempre, sin importar el modificador: el mejor
+preparado se puede comer un papelón y el más roto puede tener un momento. El modificador
+está topado en ±6 para que el dado nunca deje de importar.
+
+Hay tres formas de incertidumbre, de más liviana a más pesada:
+
+| campo | qué significa | cómo se resuelve |
+|---|---|---|
+| `pericia: "aguante"` | la acción se puede hacer bien o mal | escala los propios efectos de la opción: crítico 150% / éxito 100% / fallo 40% de lo bueno y 140% de lo malo / pifia peor |
+| `riesgo: { prob }` | hay una complicación que puede aparecer | fallar la tirada hace aparecer la complicación |
+| `tirada: { stat, dificultad }` | éxito y fallo son dos ramas escritas | elige entre `exito` y `fallo`, y el crítico o la pifia amplifican la que tocó |
+
+`pericia` existe para que el dado entre en todas partes con un campo de una palabra y sin
+escribir prosa nueva. Cuando no hay texto propio para el resultado, se usa el banco de
+`content/dados-textos.js`, que tiene líneas por categoría para que no chirríen.
+
+El stat contra el que se tira sale del contenido; cuando no lo dice, se deduce de la
+categoría del evento — regatear no se defiende con el cuerpo y una pelea no se defiende con
+labia. Hoy: 282 de 690 opciones se juegan con dado (41%), 1,6 por evento, con 29 eventos
+sin ningún dado y 7 donde todas las opciones tiran.
+
+## El elenco
+
+Cada run sortea **tres personas que van a volver a aparecer**: un chanta, alguien de la
+calle y alguien que te cuida. Están en la barra de arriba, y las que ya cruzaste se marcan
+con las veces que las viste.
+
+Los eventos prefieren reutilizarlas antes que sortear un desconocido (70% para el elenco,
+35% para cualquiera que ya hayas cruzado), así que el viaje tiene gente en vez de ser una
+sucesión de caras nuevas: el elenco cubre ~54% de las apariciones y una run pasa de ~17
+personas distintas a ~8.
+
+El elenco se sortea de nuevo en cada run, así que la continuidad es interna y la variedad
+entre partidas no se toca: medido, la repetición de textos siguió en 0% en los dos extremos.
+Las piezas del plano astral quedan afuera — un jaguar que te acompaña todo el viaje por el
+conurbano no es un elenco, es un error.
+
+---
+
 ## No repetición
 
 Es el requisito central del proyecto y funciona en cuatro capas:
@@ -243,13 +289,16 @@ index.html                 carga los scripts en orden (globals, sin módulos →
 style.css                  terminal oscura + 3 temas desbloqueables
 js/
   state.js                 stats, RNG con semilla, los tres almacenes de localStorage
-  content-engine.js        selección anti-repetición, firmas, ensamblado del texto
-  game.js                  loop de turnos, tramos, metabolismo, muertes, finales
+  dados.js                 el d20: modificador, crítico y pifia, escala de resultados
+  content-engine.js        selección anti-repetición, firmas, ensamblado del texto,
+                           y el sorteo de personas que prefiere al elenco
+  game.js                  loop de turnos, tramos, elenco, dados, muertes, finales
   meta.js                  cálculo de KA, logros, tienda
   ui.js                    render, distorsión por Efecto, teclado
 content/
   pieces.js                56 escenarios · 56 personajes · 55 complicaciones · 25 objetos · 40 frases
   ascii.js                 56 ilustraciones
+  dados-textos.js          líneas de crítico, fallo y pifia por categoría
   unlocks.js               el árbol de 35 desbloqueos
   characters.js            7 jugables · 8 reliquias · 14 logros
   endings.js               evento del Ascenso (5 redacciones) · 7 finales · 5 muertes · 44 epitafios
@@ -293,6 +342,11 @@ La suite verifica, entre otras cosas:
 - que **las 5 muertes y los 7 finales sean alcanzables** — cada uno con la estrategia
   que lo busca y presupuesto acotado, así el contenido inalcanzable falla en vez de
   pasar desapercibido;
+- la matemática del dado: que 50% sea 50%, que el crítico y la pifia salgan ~5% cada uno,
+  que el pronóstico que se le muestra al jugador coincida con lo que pasa, y que el dado
+  aparezca seguido pero no en todas las opciones;
+- que el elenco vuelva a aparecer, que cambie entre runs y que nunca incluya piezas
+  astrales;
 - que la repetición de textos se mantenga en 0% a lo largo de 60 runs seguidas, medida
   tanto con el pool base como con todo desbloqueado;
 - que los 35 desbloqueos sean comprables y que no se pueda saltear un requisito;
