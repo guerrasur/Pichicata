@@ -1,0 +1,228 @@
+#!/usr/bin/env node
+/* PICHICATA — smoke test de navegador. Cubre lo que el arnés de Node no puede:
+   que index.html cargue con file://, que los clicks y el teclado funcionen y que
+   la UI no explote.
+
+   Es OPCIONAL y necesita Playwright:
+     npm i --no-save playwright
+     node test/browser.js
+     node test/browser.js --fotos   guarda capturas en /tmp
+
+   Si Playwright no está instalado, sale con código 0 y avisa: la suite
+   principal (test/run.js) no depende de esto. */
+
+const path = require("path");
+const fs = require("fs");
+
+let chromium;
+try {
+  ({ chromium } = require("playwright"));
+} catch (e) {
+  console.log("\n\x1b[2mPlaywright no está instalado — se saltea el smoke test de navegador.");
+  console.log("   npm i --no-save playwright && node test/browser.js\x1b[0m\n");
+  process.exit(0);
+}
+
+const FOTOS = process.argv.includes("--fotos");
+const INDEX = "file://" + path.join(__dirname, "..", "index.html");
+const DIR_FOTOS = "/tmp/pichicata-fotos";
+
+let fallos = 0;
+const ok = m => console.log("   \x1b[32m✓\x1b[0m " + m);
+const mal = m => { console.log("   \x1b[31m✗ " + m + "\x1b[0m"); fallos++; };
+const info = m => console.log("     \x1b[2m" + m + "\x1b[0m");
+const afirmar = (c, bien, malo) => { c ? ok(bien) : mal(malo || bien); return c; };
+
+/* Chromium puede venir preinstalado en otra ruta que la que espera Playwright. */
+function opcionesDeLanzamiento() {
+  for (const p of ["/opt/pw-browsers/chromium", process.env.CHROMIUM_PATH]) {
+    if (p && fs.existsSync(p)) return { executablePath: p };
+  }
+  return {};
+}
+
+async function foto(page, nombre) {
+  if (!FOTOS) return;
+  fs.mkdirSync(DIR_FOTOS, { recursive: true });
+  await page.screenshot({ path: path.join(DIR_FOTOS, nombre + ".png") });
+}
+
+(async () => {
+  console.log("\n\x1b[1mPICHICATA — smoke test de navegador\x1b[0m");
+
+  const browser = await chromium.launch(opcionesDeLanzamiento());
+  const page = await browser.newPage({ viewport: { width: 900, height: 1200 } });
+
+  const errores = [];
+  page.on("pageerror", e => errores.push("pageerror: " + e.message));
+  page.on("console", m => { if (m.type() === "error") errores.push("console: " + m.text()); });
+
+  /* ---------- carga ---------- */
+  console.log("\n\x1b[1mcarga con file://\x1b[0m");
+  await page.goto(INDEX);
+  await page.waitForSelector(".logo", { timeout: 5000 });
+  ok("index.html carga sin servidor y renderiza el menú");
+  info((await page.textContent(".bloque .tenue")).replace(/\s+/g, " ").trim().slice(0, 110));
+  await foto(page, "1-menu");
+
+  /* ---------- una run completa ---------- */
+  console.log("\n\x1b[1muna run completa\x1b[0m");
+  await page.click('[data-act="nueva"]');
+  await page.waitForSelector(".hud");
+
+  const stats = await page.$$eval(".stat", els => els.length);
+  afirmar(stats === 6, "la barra muestra las 6 stats", `muestra ${stats} stats`);
+
+  const parrafos = await page.$$eval(".evento p", els => els.map(e => e.textContent));
+  afirmar(parrafos.length >= 2 && parrafos.length <= 4,
+    `el evento tiene ${parrafos.length} párrafos cortos`, `párrafos fuera de rango: ${parrafos.length}`);
+  const opciones = await page.$$eval(".opcion", els => els.length);
+  afirmar(opciones >= 2 && opciones <= 6, `${opciones} opciones de decisión`, `opciones fuera de rango: ${opciones}`);
+  await foto(page, "2-evento");
+
+  // alternamos teclado y mouse hasta llegar a un final
+  let turnos = 0, i = 0;
+  while (i++ < 300 && !(await page.$(".fin"))) {
+    if (await page.$(".opcion[data-op]")) {
+      if (i % 2 === 0) await page.keyboard.press("1");
+      else await page.click(".opcion[data-op]");
+      turnos++;
+    } else if (await page.$('[data-act="continuar"]')) {
+      if (i % 3 === 0) await page.keyboard.press(" ");
+      else await page.click('[data-act="continuar"]');
+    } else break;
+    await page.waitForTimeout(8);
+  }
+  afirmar(await page.$(".fin"), `la run llega a un final en ${turnos} turnos (mouse y teclado)`,
+    "la run no llegó a ningún final");
+  if (await page.$(".fin")) {
+    info("final: " + (await page.textContent(".fin h2")).trim() +
+      " · " + (await page.textContent(".fila-kv.total")).replace(/\s+/g, " ").trim());
+    await foto(page, "3-final");
+  }
+
+  /* ---------- tienda ---------- */
+  console.log("\n\x1b[1mtienda de desbloqueos\x1b[0m");
+  await page.click('[data-act="tienda"]');
+  await page.waitForSelector(".lista-unlocks");
+  const enRamaA = await page.$$eval(".unlock", els => els.length);
+  afirmar(enRamaA > 0, `la rama A lista ${enRamaA} desbloqueos`, "la tienda está vacía");
+
+  const comprables = await page.$$(".comprar");
+  if (comprables.length) {
+    const antes = parseInt((await page.textContent(".destacado")).replace(/\D/g, ""), 10);
+    await comprables[0].click();
+    await page.waitForTimeout(80);
+    const despues = parseInt((await page.textContent(".destacado")).replace(/\D/g, ""), 10);
+    afirmar(despues < antes, `comprar descuenta KA (${antes} → ${despues})`,
+      "comprar no descontó KA");
+  } else {
+    info("sin KA suficiente para comprar en esta run: se saltea la compra");
+  }
+
+  for (const rama of ["B", "C", "D", "E"]) {
+    await page.click(`[data-rama="${rama}"]`);
+    await page.waitForTimeout(30);
+    const n = await page.$$eval(".unlock", els => els.length);
+    if (!n) mal(`la rama ${rama} quedó vacía`);
+  }
+  ok("las 5 ramas del árbol renderizan");
+  await foto(page, "4-tienda");
+
+  /* ---------- otras pantallas ---------- */
+  console.log("\n\x1b[1mpantallas\x1b[0m");
+  await page.click('[data-act="menu"]');
+  await page.click('[data-act="personajes"]');
+  await page.waitForSelector(".lista-unlocks");
+  const pjs = await page.$$eval(".unlock", els => els.length);
+  afirmar(pjs === 7, "las 7 encarnaciones se listan", `se listan ${pjs} encarnaciones`);
+
+  await page.click('[data-act="menu"]');
+  await page.click('[data-act="ayuda"]');
+  await page.waitForSelector(".bloque.peligro");
+  ok("la pantalla de ayuda renderiza");
+
+  /* ---------- persistencia entre recargas ---------- */
+  console.log("\n\x1b[1mpersistencia\x1b[0m");
+  await page.click('[data-act="menu"]');
+  await page.click('[data-act="nueva"]');
+  await page.waitForSelector(".hud");
+  await page.click(".opcion[data-op]");
+  await page.waitForTimeout(40);
+  await page.click('[data-act="continuar"]');
+  await page.waitForSelector(".hud");
+  const antesRecarga = (await page.textContent(".hud")).replace(/\s+/g, " ").trim();
+
+  await page.reload();
+  await page.waitForSelector('[data-act="reanudar"]');
+  await page.click('[data-act="reanudar"]');
+  await page.waitForSelector(".hud");
+  const despuesRecarga = (await page.textContent(".hud")).replace(/\s+/g, " ").trim();
+  afirmar(antesRecarga === despuesRecarga,
+    "reanudar tras recargar la pestaña restaura el turno y las stats",
+    "reanudar perdió estado:\n       antes:   " + antesRecarga + "\n       después: " + despuesRecarga);
+
+  /* ---------- temas y distorsión ---------- */
+  console.log("\n\x1b[1mtemas y distorsión\x1b[0m");
+  const temas = await page.evaluate(() => {
+    const res = [];
+    PICHI.meta.unlocks.push("E2", "E3", "E4", "E6", "E5");
+    for (const t of ["base", "fosforo", "ambar", "ceremonial"]) {
+      PICHI.meta.tema = t;
+      PICHI.UI.render();
+      res.push(document.documentElement.getAttribute("data-tema") + ":" +
+        getComputedStyle(document.body).backgroundColor);
+    }
+    return res;
+  });
+  const fondosDistintos = new Set(temas.map(t => t.split(":")[1])).size;
+  afirmar(fondosDistintos === 4, "los 4 temas aplican fondos distintos",
+    "algunos temas comparten fondo: " + temas.join(" | "));
+
+  const marco = await page.evaluate(() => {
+    PICHI.UI.render();
+    return document.documentElement.getAttribute("data-marco");
+  });
+  afirmar(marco === "si", "el marco ASCII se activa al desbloquearlo", "el marco no se aplicó");
+
+  const distorsion = await page.evaluate(() => {
+    const limpio = PICHI.UI.distorsionar("casa serena con muchas letras repetidas", 0);
+    const dado = PICHI.UI.distorsionar("casa serena con muchas letras repetidas", 95);
+    return { limpio, dado, cambia: limpio !== dado };
+  });
+  afirmar(distorsion.limpio === "casa serena con muchas letras repetidas",
+    "con Efecto bajo el texto no se toca", "el texto se distorsiona sin Efecto");
+  afirmar(distorsion.cambia, "con Efecto alto el texto se deforma",
+    "el texto no cambia con Efecto 95");
+  info("Efecto 95 → " + distorsion.dado.slice(0, 60));
+  await foto(page, "5-tema");
+
+  /* ---------- responsive ---------- */
+  console.log("\n\x1b[1mresponsive\x1b[0m");
+  for (const w of [390, 320]) {
+    await page.setViewportSize({ width: w, height: 844 });
+    await page.waitForTimeout(50);
+    const overflow = await page.evaluate(() =>
+      document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    afirmar(overflow <= 1, `sin scroll horizontal en ${w}px`,
+      `en ${w}px la página scrollea ${overflow}px de más`);
+  }
+
+  /* ---------- errores de consola ---------- */
+  console.log("\n\x1b[1mconsola\x1b[0m");
+  afirmar(errores.length === 0, "cero errores de JS en toda la sesión",
+    "errores de JS:\n       " + errores.join("\n       "));
+
+  await browser.close();
+
+  if (FOTOS) console.log("\n\x1b[2mcapturas en " + DIR_FOTOS + "\x1b[0m");
+  console.log("");
+  if (fallos) {
+    console.log(`\x1b[31m\x1b[1m${fallos} problema(s).\x1b[0m\n`);
+    process.exit(1);
+  }
+  console.log("\x1b[32m\x1b[1mTodo en orden.\x1b[0m\n");
+})().catch(e => {
+  console.log("\n\x1b[31m✗ el smoke test explotó: " + e.message + "\x1b[0m\n");
+  process.exit(1);
+});

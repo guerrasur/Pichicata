@@ -38,6 +38,23 @@ Todo el progreso vive en `localStorage` de tu navegador.
 | Conciencia ≤ 0 | **Vegetal astral** |
 | Mangos ≤ −300 | **Te vinieron a cobrar** |
 
+### La curva del Efecto
+
+El Efecto no es una barra lineal: tiene tres zonas y cada una te cobra distinto. Es lo que
+hace que "estar limpio y paranoico" y "estar dado vuelta y tranquilo" sean dos formas
+distintas de jugar.
+
+| zona | por turno | qué significa |
+|---|---|---|
+| ≤ 10 | −2 Paranoia | limpio: la cabeza se acomoda sola |
+| 40-84 | +2 a +4 Paranoia | la zona paranoica: acá se brota la gente |
+| ≥ 85 | −3 Paranoia, −8 Aguante | más allá de la paranoia: ya no pensás, paga el cuerpo |
+
+El cuerpo limpia más lento cuanto más cargado estás (−4/−8 por turno arriba de 70, −10/−15
+abajo), así que sostenerse en la zona roja es posible y es caro. La sobredosis se dispara
+por la dosis **cruda** —meterte 38 encima de 85 son 123, no 100— o por aguantar dos turnos
+seguidos arriba de 90.
+
 ### Victorias
 
 Se entra al Tramo IV con Conciencia ≥ 85 y se gana con 108. El final concreto sale del
@@ -245,6 +262,38 @@ content/
   events-rutas.js          23  (D1 + D2 + D5)
 ```
 
+## Pruebas
+
+```
+node test/run.js              suite completa, sin dependencias  (~15s)
+node test/run.js --rapido     menos runs, para iterar           (~3s)
+
+npm i --no-save playwright    opcional
+node test/browser.js          smoke test de navegador
+node test/browser.js --fotos  además guarda capturas en /tmp
+```
+
+`test/harness.js` carga los archivos reales del juego en un sandbox de Node con
+`localStorage` y `document` stubbeados, y expone estrategias de juego automático.
+Cada estrategia estresa el motor por un lado distinto: `asceta` busca iluminarse y
+ejercita los tramos IV y V, `quemado` persigue el Efecto, `vegetal` se apaga,
+`kamikaze` se revienta.
+
+La suite verifica, entre otras cosas:
+
+- que `index.html` y el arnés carguen los mismos archivos (si agregás contenido y te
+  olvidás de uno de los dos lados, falla);
+- estructura y referencias cruzadas de los 155 eventos, incluidos ascii y unlocks;
+- que todo placeholder exista, tenga su slot declarado y use `{^…}` a principio de oración;
+- que ninguna pieza del plano astral se filtre a eventos mundanos y que ningún slot
+  quede sin candidatos temáticos;
+- que **las 5 muertes y los 7 finales sean alcanzables** — cada uno con la estrategia
+  que lo busca y presupuesto acotado, así el contenido inalcanzable falla en vez de
+  pasar desapercibido;
+- que la repetición de textos se mantenga en 0% a lo largo de 60 runs seguidas;
+- que los 35 desbloqueos sean comprables y que no se pueda saltear un requisito;
+- que morir no toque el KA y que un save corrupto no rompa la carga.
+
 ## Cómo agregar contenido
 
 Un archivo nuevo en `content/`, un `<script>` en `index.html`, y:
@@ -257,12 +306,15 @@ Piezas nuevas: pushealas a `PICHI.ESCENARIOS`, `PICHI.PERSONAJES` o
 `PICHI.COMPLICACIONES` y se cruzan solas con **todos** los eventos que pidan esos tags.
 Es la vía más barata de multiplicar variedad.
 
-Dos reglas que el motor no puede chequear por vos:
+Dos reglas que el motor no aplica solo, pero que las pruebas sí chequean:
 
 - Un placeholder a principio de oración va con `{^…}` para que se capitalice.
 - Las piezas del plano astral (`vos, a los siete`, `tu doble`…) llevan **solo** los tags
   `ego` y `astral`. Si les agregás tags genéricos se filtran a eventos mundanos y aparece
   *vos, a los siete* comprando en un kiosco.
+
+Corré `node test/run.js` después de tocar contenido: además de esas dos reglas verifica
+que no hayas dejado un evento con pool chico ni un slot sin candidatos.
 
 ## Atajos
 

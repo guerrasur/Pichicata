@@ -289,6 +289,10 @@ PICHI.elegirOpcion = function (indice) {
   PICHI.run.marcas.decisiones++;
   PICHI.aplicarStats(deltas);
 
+  /* El pico queda registrado en aplicarStats. Se chequea en continuar(), donde
+     el metabolismo ya bajó el Efecto: la sobredosis se juega con la dosis que
+     te metiste, no con lo que te queda después de metabolizarla. */
+
   // 8. final forzado / final del juego
   if (op.finalizar || PICHI.run.evento.esFinal) {
     PICHI.terminarRun(op.forzarFinal || null);
@@ -311,7 +315,14 @@ PICHI.aplicarStats = function (deltas) {
   var s = PICHI.run.stats;
   for (var k in deltas) {
     if (typeof s[k] !== "number") continue;
-    s[k] = PICHI.clampStat(k, s[k] + deltas[k]);
+    var crudo = s[k] + deltas[k];
+    /* El Efecto se muestra topado en 100, pero la sobredosis se juega con la
+       dosis CRUDA: meterse 38 encima de 85 son 123, no 100. Sin esto, como las
+       opciones de dosis grande están gateadas por Efecto bajo, el tope de 100
+       nunca se cruza y la muerte por Efecto (y toda la Ampolla de Naloxona)
+       queda como contenido inalcanzable. */
+    if (k === "efecto" && crudo > (PICHI.run.efectoCrudo || 0)) PICHI.run.efectoCrudo = crudo;
+    s[k] = PICHI.clampStat(k, crudo);
   }
   var m = PICHI.run.marcas;
   if (s.conciencia > m.maxConciencia) m.maxConciencia = s.conciencia;
@@ -328,17 +339,37 @@ PICHI.continuar = function () {
   var deltas = {};
   var s = PICHI.run.stats;
 
-  // metabolismo
-  aplicarDelta(deltas, "efecto", -(10 + PICHI.rndInt(6)));
+  /* Metabolismo saturable: cuanto más cargado estás, más lento limpia el cuerpo.
+     Con un drenaje plano de 10-15 por turno era imposible SOSTENER Efecto alto
+     —siempre volvías a la zona paranoica— y la sobredosis quedaba fuera de
+     alcance por aritmética, no por decisión del jugador. */
+  aplicarDelta(deltas, "efecto", s.efecto >= 70 ? -(4 + PICHI.rndInt(4)) : -(10 + PICHI.rndInt(6)));
   aplicarDelta(deltas, "aguante", PICHI.run.pasiva === "doctora" ? -3 : -2);
-  if (s.efecto >= 70) aplicarDelta(deltas, "paranoia", 4);
+  /* La curva del Efecto tiene tres zonas y cada una te cobra distinto:
+       0-10   limpio: la cabeza se acomoda sola
+       40-84  la zona paranoica: acá es donde se brota la gente
+       85+    más allá de la paranoia: ya no pensás, el que paga es el cuerpo
+     Sin la tercera zona la Paranoia saturaba a 100 antes de que el Efecto
+     pudiera sostenerse, y el Brote le ganaba siempre la carrera a la
+     sobredosis: dos muertes compitiendo y una imposible. */
+  if (s.efecto >= 85) {
+    aplicarDelta(deltas, "paranoia", -3);
+    aplicarDelta(deltas, "aguante", -8);
+  } else if (s.efecto >= 70) aplicarDelta(deltas, "paranoia", 4);
   else if (s.efecto >= 40) aplicarDelta(deltas, "paranoia", 2);
-  else if (s.efecto <= 10) aplicarDelta(deltas, "paranoia", -2);   // estar limpio baja la cabeza
+  else if (s.efecto <= 10) aplicarDelta(deltas, "paranoia", -2);
   if (PICHI.tieneReliquiaEnRun("C1")) aplicarDelta(deltas, "paranoia", -3);
   if (PICHI.run.pasiva === "fumon" && s.efecto >= 20) aplicarDelta(deltas, "conciencia", 1);
 
   PICHI.aplicarStats(deltas);
   PICHI.run.metabolismo = deltas;
+
+  /* Sostener Efecto altísimo también mata, no solo el pico de una dosis.
+     Es la muerte característica del que se la pasa arriba: dos turnos en rojo
+     y el cuerpo no vuelve. Sin esto la sobredosis dependía de clavar 100 justo
+     en un turno, que pasaba en menos del 1% de las runs. */
+  if (PICHI.run.stats.efecto >= 90) PICHI.run.turnosEnRojo = (PICHI.run.turnosEnRojo || 0) + 1;
+  else PICHI.run.turnosEnRojo = 0;
 
   // muerte
   var causa = PICHI.chequearMuerte();
@@ -361,16 +392,19 @@ PICHI.continuar = function () {
   }
 
   PICHI.run.resolucion = null;
+  PICHI.run.efectoCrudo = PICHI.run.stats.efecto;   // el pico no se arrastra al turno siguiente
   PICHI.siguienteEvento();
 };
 
 PICHI.chequearMuerte = function () {
   var s = PICHI.run.stats;
+  var pico = Math.max(s.efecto, PICHI.run.efectoCrudo || 0);
   if (s.aguante <= 0) return "aguante";
-  if (s.efecto >= 100) {
+  if (pico >= 100 || (PICHI.run.turnosEnRojo || 0) >= 2) {
     if (PICHI.tieneReliquiaEnRun("C2") && !PICHI.run.naloxonaUsada) {
       PICHI.run.naloxonaUsada = true;
-      s.efecto = 60; s.aguante = PICHI.clampStat("aguante", s.aguante - 20);
+      s.efecto = 60; PICHI.run.efectoCrudo = 60; PICHI.run.turnosEnRojo = 0;
+      s.aguante = PICHI.clampStat("aguante", s.aguante - 20);
       PICHI.run.milagro = "La Ampolla de Naloxona Bendecida. Alguien te la clavó en el muslo sin preguntar. Volvés con una deuda y con vida.";
       if (s.aguante <= 0) return "aguante";
       return null;
