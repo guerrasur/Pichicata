@@ -25,7 +25,7 @@ Todo el progreso vive en `localStorage` de tu navegador.
 | **Karma** | −100 → +100 | No mata: filtra qué eventos aparecen y **qué final te toca**. La tibieza no paga. |
 | **Aguante** | 0 → 100 | El cuerpo. Trasnoches, peleas, hambre y sustancias lo bajan. |
 | **Mangos** | libre | Plata. Podés estar en rojo, pero hay un piso. |
-| **Efecto** | 0 → 100 | Cuánta sustancia tenés **activa ahora**. Distorsiona la UI y el texto. Baja 10-15 por turno. |
+| **Efecto** | 0 → 100 | Cuánta sustancia tenés **activa ahora**. Distorsiona la UI y el texto. El cuerpo lo limpia solo, más lento cuanto más cargado estés. |
 | **Paranoia** | 0 → 100 | Independiente del Efecto. Cierra opciones sociales y abre opciones erráticas. |
 
 ### Derrotas
@@ -101,7 +101,7 @@ en runtime con piezas sorteadas del banco:
     complicacion: { tags: ["ritual", "social", "misterio"] }
   },
   ascii: "cuenco",
-  variantes: [                          // 2-3 redacciones del mismo evento
+  variantes: [                          // 2 a 5 redacciones del mismo evento
     { texto: ["párrafo con {escenario} y {personaje.nombre}", "…", "{^complicacion}."] },
     { texto: [ /* … */ ] }
   ],
@@ -141,13 +141,15 @@ solo `seen` (volver a ver textos viejos) sin tocar el KA ni los desbloqueos.
 
 | | solo contenido base | todo desbloqueado |
 |---|---|---|
-| eventos base | 61 | 154 |
-| escenarios / personajes / complicaciones | 17 / 24 / 25 | 46 / 48 / 39 |
-| combinaciones registrables | ≈ 620.000 | ≈ 13.200.000 |
-| espacio mediano por evento | 306 textos distintos | 1.188 textos distintos |
+| eventos base | 80 | 173 |
+| escenarios / personajes / complicaciones | 27 / 36 / 41 | 56 / 56 / 55 |
+| combinaciones registrables | ≈ 2.500.000 | ≈ 29.900.000 |
+| espacio mediano por evento | 700 textos distintos | 2.240 textos distintos |
 
-En 60 runs seguidas (~1.150 eventos mostrados) con todo desbloqueado: **0 textos
-repetidos**. El menú muestra estos números en vivo.
+En 60 runs seguidas (~1.000 eventos mostrados): **0 textos repetidos**, tanto con el pool
+base como con todo desbloqueado. Se mide en los dos extremos porque el jugador nuevo es el
+caso peor y es justo el que decide si el juego engancha. El menú muestra estos números en
+vivo.
 
 ---
 
@@ -246,13 +248,14 @@ js/
   meta.js                  cálculo de KA, logros, tienda
   ui.js                    render, distorsión por Efecto, teclado
 content/
-  pieces.js                46 escenarios · 48 personajes · 39 complicaciones · 25 objetos · 40 frases
+  pieces.js                56 escenarios · 56 personajes · 55 complicaciones · 25 objetos · 40 frases
   ascii.js                 56 ilustraciones
   unlocks.js               el árbol de 35 desbloqueos
   characters.js            7 jugables · 8 reliquias · 14 logros
-  endings.js               evento del Ascenso · 7 finales · 5 muertes · 44 epitafios
+  endings.js               evento del Ascenso (5 redacciones) · 7 finales · 5 muertes · 44 epitafios
   events-core.js           27 eventos base
   events-core-2.js         26 eventos base
+  events-base-extra.js     19 eventos base (ruta, combate, comercio y Tramo IV)
   events-conurbano.js      13  (A1)
   events-retiro.js         13  (A2)
   events-after.js          13  (A3)
@@ -290,13 +293,15 @@ La suite verifica, entre otras cosas:
 - que **las 5 muertes y los 7 finales sean alcanzables** — cada uno con la estrategia
   que lo busca y presupuesto acotado, así el contenido inalcanzable falla en vez de
   pasar desapercibido;
-- que la repetición de textos se mantenga en 0% a lo largo de 60 runs seguidas;
+- que la repetición de textos se mantenga en 0% a lo largo de 60 runs seguidas, medida
+  tanto con el pool base como con todo desbloqueado;
 - que los 35 desbloqueos sean comprables y que no se pueda saltear un requisito;
 - que morir no toque el KA y que un save corrupto no rompa la carga.
 
 ## Cómo agregar contenido
 
-Un archivo nuevo en `content/`, un `<script>` en `index.html`, y:
+Un archivo nuevo en `content/`, un `<script>` en `index.html`, una línea en `ARCHIVOS`
+de `test/harness.js` (la suite falla si te olvidás de alguno de los tres), y:
 
 ```js
 PICHI.addEvents([ { id: "…", categoria: "…", tramo: [2], peso: 10, unlock: "A1", /* … */ } ]);

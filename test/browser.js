@@ -185,16 +185,27 @@ async function foto(page, nombre) {
   });
   afirmar(marco === "si", "el marco ASCII se activa al desbloquearlo", "el marco no se aplicó");
 
+  /* La deformación es probabilística por carácter, así que se mide sobre varias
+     muestras: con una sola había ~4% de chance de que no tocara ninguna letra y
+     la prueba salía flaky. */
   const distorsion = await page.evaluate(() => {
-    const limpio = PICHI.UI.distorsionar("casa serena con muchas letras repetidas", 0);
-    const dado = PICHI.UI.distorsionar("casa serena con muchas letras repetidas", 95);
-    return { limpio, dado, cambia: limpio !== dado };
+    const frase = "casa serena con muchas letras repetidas y sonoras";
+    const limpias = [], dadas = [];
+    for (let i = 0; i < 10; i++) {
+      limpias.push(PICHI.UI.distorsionar(frase, 0));
+      dadas.push(PICHI.UI.distorsionar(frase, 95));
+    }
+    return {
+      intactas: limpias.filter(t => t === frase).length,
+      deformadas: dadas.filter(t => t !== frase).length,
+      muestra: dadas.find(t => t !== frase) || dadas[0]
+    };
   });
-  afirmar(distorsion.limpio === "casa serena con muchas letras repetidas",
-    "con Efecto bajo el texto no se toca", "el texto se distorsiona sin Efecto");
-  afirmar(distorsion.cambia, "con Efecto alto el texto se deforma",
-    "el texto no cambia con Efecto 95");
-  info("Efecto 95 → " + distorsion.dado.slice(0, 60));
+  afirmar(distorsion.intactas === 10, "con Efecto bajo el texto nunca se toca (10/10 intactas)",
+    `el texto se distorsiona sin Efecto (${10 - distorsion.intactas}/10 deformadas)`);
+  afirmar(distorsion.deformadas >= 8, `con Efecto alto el texto se deforma (${distorsion.deformadas}/10)`,
+    `la distorsión casi no actúa: solo ${distorsion.deformadas}/10 muestras cambiaron`);
+  info("Efecto 95 → " + distorsion.muestra.slice(0, 60));
   await foto(page, "5-tema");
 
   /* ---------- responsive ---------- */
