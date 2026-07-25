@@ -6,7 +6,10 @@ window.PICHI = window.PICHI || {};
 
 PICHI.EVENTO_ASCENSO = {
   id: "ev_ascenso", categoria: "final", tramo: [4], peso: 100, unlock: null,
-  slots: { personaje: { tags: ["guru", "ego", "autentico"] } },
+  /* Este evento se muestra una sola vez por run, así que su pool se agota antes
+     que el de cualquier otro: es el único lugar donde la repetición se notaba
+     con el contenido base. De ahí las 5 redacciones y el filtro amplio. */
+  slots: { personaje: { tags: ["guru", "ego", "autentico", "veterano"] }, complicacion: { tags: ["astral", "misterio", "melancolia"] } },
   ascii: "escalera",
   variantes: [
     { texto: [
@@ -23,6 +26,16 @@ PICHI.EVENTO_ASCENSO = {
       "Cuatro tramos, todos los eventos, todas las decisiones, y esto: nueve escalones y una decisión.",
       "No hay música. No hay ceremonia. No hay nadie filmando.",
       "«{frase}», dice {personaje.nombre}, y se ríe de su propia frase, y eso es lo más iluminado que dijo en todo el viaje."
+    ]},
+    { texto: [
+      "La escalera está a la vuelta de una esquina cualquiera y no tiene nada de particular, y eso es lo que la vuelve insoportable.",
+      "Nueve escalones de material, con el revoque a la vista y una mancha de humedad en el tercero.",
+      "{^complicacion}. {^personaje.nombre} no dice nada: está sentado en el primer escalón, corriéndose para dejarte pasar."
+    ]},
+    { texto: [
+      "No hay portal, no hay luz, no hay coro. Hay una escalera y una hora del día.",
+      "{^personaje.desc}. Fuma sentado abajo y no te mira subir a nadie, porque ya vio subir a varios.",
+      "{^complicacion}, y todavía tenés el cuenco en la mano y un mango en el bolsillo."
     ]}
   ],
   opciones: [

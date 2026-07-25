@@ -184,8 +184,11 @@ grupo("coherencia de las piezas", () => {
     return estrictos.length ? estrictos : disp;   // el motor relaja el filtro si no hay nadie
   };
 
-  // 1. las piezas del plano astral no deben aparecer en eventos mundanos
-  const esAstral = e => /^(as_|eg_|vc_)/.test(e.id) || ["ev_ego_astral", "ev_iluminacion_falsa"].includes(e.id);
+  /* 1. las piezas del plano astral no deben aparecer en eventos mundanos.
+     Un evento declara que juega en el plano astral con `astral: true`; los packs
+     as_/eg_/vc_ lo son por definición. */
+  const esAstral = e => e.astral === true || /^(as_|eg_|vc_)/.test(e.id) ||
+    ["ev_ego_astral", "ev_iluminacion_falsa"].includes(e.id);
   const soloAstral = P.PERSONAJES.filter(p => (p.tags || []).every(t => t === "ego" || t === "astral"));
   const fugas = [];
   for (const e of P.EVENTS) {
@@ -345,27 +348,31 @@ grupo("las cinco muertes son alcanzables", () => {
 });
 
 grupo("no repetición de contenido", () => {
-  const P = cargar();
-  desbloquearTodo(P);
-
   const RUNS = RAPIDO ? 15 : 60;
-  for (let i = 0; i < RUNS; i++) jugarRun(P, ESTRATEGIAS.azar);
 
-  const mostrados = Object.values(P.seen.eventCount).reduce((a, b) => a + b, 0);
-  const unicos = Object.keys(P.seen.combos).length;
-  const repetidos = mostrados - unicos;
-  const pct = (repetidos / mostrados) * 100;
+  /* Se mide en los dos extremos. El jugador NUEVO es el caso peor —tiene solo el
+     pool base— y es justo el que decide si el juego engancha o se abandona. */
+  const medir = (etiqueta, desbloquear, techo) => {
+    const P = cargar();
+    if (desbloquear) desbloquearTodo(P);
+    for (let i = 0; i < RUNS; i++) jugarRun(P, ESTRATEGIAS.azar);
 
-  info(`${RUNS} runs seguidas · ${mostrados} eventos mostrados · ${unicos} combinaciones únicas`);
-  afirmar(pct <= 1, `repetición de textos: ${pct.toFixed(1)}%`,
-    `demasiada repetición: ${pct.toFixed(1)}% (${repetidos} textos repetidos)`);
+    const mostrados = Object.values(P.seen.eventCount).reduce((a, b) => a + b, 0);
+    const unicos = Object.keys(P.seen.combos).length;
+    const pct = ((mostrados - unicos) / mostrados) * 100;
+    const conteos = Object.values(P.seen.eventCount);
+    const max = Math.max(...conteos), min = Math.min(...conteos);
 
-  // el pool tiene que rotar: nadie debe salir mucho más que el resto
-  const conteos = Object.values(P.seen.eventCount);
-  const max = Math.max(...conteos), min = Math.min(...conteos);
-  const disponibles = P.diagnostico().eventos;
-  const cubiertos = Object.keys(P.seen.eventCount).length;
-  info(`eventos base vistos ${cubiertos}/${disponibles} · el más visto salió ${max} veces, el menos visto ${min}`);
+    info(`${etiqueta}: ${P.diagnostico().eventos} eventos disponibles · ${mostrados} mostrados · ` +
+      `${unicos} únicos · el más visto salió ${max} veces`);
+    afirmar(pct <= techo, `${etiqueta} — repetición ${pct.toFixed(1)}% (techo ${techo}%)`,
+      `${etiqueta} — demasiada repetición: ${pct.toFixed(1)}% en ${RUNS} runs`);
+    return { P, mostrados, max, min };
+  };
+
+  medir("jugador nuevo (solo pool base)", false, 1.5);
+  const { P, mostrados, max, min } = medir("todo desbloqueado", true, 1);
+
   afirmar(max - min <= mostrados / 20,
     "el pool rota parejo (nadie se repite antes de que salgan los demás)",
     `rotación desbalanceada: alguien salió ${max} veces y otro ${min}`);

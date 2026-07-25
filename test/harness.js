@@ -20,6 +20,7 @@ const ARCHIVOS = [
   "content/endings.js",
   "content/events-core.js",
   "content/events-core-2.js",
+  "content/events-base-extra.js",
   "content/events-conurbano.js",
   "content/events-retiro.js",
   "content/events-after.js",

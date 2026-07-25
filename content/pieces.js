@@ -21,6 +21,16 @@ PICHI.ESCENARIOS = [
   { id: "esc_lavadero", nombre: "un lavadero automático abierto 24 horas", detalle: "el zumbido de los tambores hace de mantra sin cobrar nada", tags: ["urbano", "interior", "noche", "ritual"], unlock: null },
   { id: "esc_esquina_kiosco", nombre: "la esquina del kiosco que atiende por la ventanita", detalle: "hay tres pibes en bici que están ahí siempre, en cualquier horario, siempre", tags: ["urbano", "comercio", "social"], unlock: null },
   { id: "esc_hospital_guardia", nombre: "la sala de espera de una guardia a las cinco de la mañana", detalle: "el tubo fluorescente parpadea con un ritmo que no es de este planeta", tags: ["urbano", "interior", "noche", "cuerpo"], unlock: null },
+  { id: "esc_puente_autopista", nombre: "el puente peatonal sobre la autopista, a la altura de Pompeya", detalle: "cada camión que pasa abajo lo hace vibrar en una nota distinta", tags: ["urbano", "transito", "publico", "noche"], unlock: null },
+  { id: "esc_plaza_miserere", nombre: "el borde de la plaza de Once, entre los puestos y la escalera del subte", detalle: "hay ocho conversaciones simultáneas en cuatro idiomas", tags: ["urbano", "social", "comercio", "dia", "transito"], unlock: null },
+  { id: "esc_pasillo_pension", nombre: "el pasillo de una pensión con doce piezas y un baño", detalle: "la luz es de un tubo solo y hay que apurarse antes de que se apague", tags: ["urbano", "interior", "precario"], unlock: null },
+  { id: "esc_estacion_servicio", nombre: "el playón de una estación de servicio a las cuatro de la mañana", detalle: "el único ruido es el zumbido del cartel y la puerta automática de la tienda", tags: ["urbano", "transito", "noche", "comercio"], unlock: null },
+  { id: "esc_obra_parada", nombre: "una obra en construcción parada desde hace dos años", detalle: "hay una bolsa de cal petrificada y un cartel de una inmobiliaria que ya cerró", tags: ["urbano", "precario", "publico"], unlock: null },
+  { id: "esc_patio_iglesia", nombre: "el patio de un comedor parroquial después del almuerzo", detalle: "hay cuarenta sillas de plástico apiladas y olor a lavandina", tags: ["urbano", "social", "ritual", "dia"], unlock: null },
+  { id: "esc_terraza_lavadero", nombre: "la terraza de un edificio con la ropa de cuatro pisos colgada", detalle: "las sábanas se mueven todas juntas y da la impresión de que hay gente", tags: ["urbano", "precario", "noche", "trip"], unlock: null },
+  { id: "esc_local_bailable", nombre: "un salón de fiestas alquilado por hora en Villa Crespo", detalle: "queda papel picado de un cumpleaños de quince del sábado", tags: ["urbano", "interior", "social", "noche", "ritual"], unlock: null },
+  { id: "esc_vereda_ancha", nombre: "una vereda ancha de Avenida de Mayo con mesas afuera", detalle: "los mozos ya levantaron todo pero las sillas siguen ahí", tags: ["urbano", "social", "publico", "noche"], unlock: null },
+  { id: "esc_deposito_feria", nombre: "el depósito de una feria, entre cajones vacíos y una balanza", detalle: "huele a fruta que se pasó y a cartón mojado", tags: ["urbano", "comercio", "interior", "precario"], unlock: null },
 
   // --- A1: circuito conurbano ---
   { id: "esc_quinta_moreno", nombre: "una quinta alquilada en Moreno", detalle: "la pileta tiene una rana muerta flotando en el mismo lugar desde ayer", tags: ["conurbano", "ritual", "precario"], unlock: "A1" },
@@ -82,6 +92,14 @@ PICHI.PERSONAJES = [
   { id: "per_musico", nombre: "Pipa", mote: "que toca el tambor y no para nunca", desc: "sostiene que el ritmo cura y en algún sentido tiene razón", tags: ["ritual", "social", "musico"], unlock: null },
   { id: "per_vos_de_19", nombre: "vos, a los diecinueve", mote: "con una seguridad que nunca tuviste", desc: "usa la ropa que usabas y dice las cosas que ahora te dan vergüenza", tags: ["astral", "ego"], unlock: null },
   { id: "per_enfermera", nombre: "una enfermera del turno noche", mote: "que ya vio esto ochenta veces", desc: "no te juzga, y eso te desarma más que si te juzgara", tags: ["cuidadora", "cuerpo"], unlock: null },
+  { id: "per_verdulero", nombre: "Ramón", mote: "que atiende la verdulería desde 1994", desc: "sabe el nombre de todos los del barrio y de ninguno el apellido", tags: ["comercio", "social", "veterano"], unlock: null },
+  { id: "per_colectivero", nombre: "un colectivero del turno noche", mote: "que maneja como si el bondi fuera suyo", desc: "tiene un rosario en el espejo y una foto de una nena en el tablero", tags: ["transito", "social"], unlock: null },
+  { id: "per_pibe_bici", nombre: "un pibe en bici", mote: "que aparece en todos los horarios", desc: "diecisiete años, auriculares en el cuello, cero apuro", tags: ["joven", "lumpen", "transito"], unlock: null },
+  { id: "per_señora_comedor", nombre: "doña Chela", mote: "que cocina en el comedor de la parroquia", desc: "sesenta y ocho años, delantal, y un radar para detectar a los que no comieron", tags: ["cuidadora", "social", "religioso"], unlock: null },
+  { id: "per_profesor", nombre: "Aldo", mote: "profesor de secundaria en licencia", desc: "explica todo como si hubiera un pizarrón atrás y a veces lo hay", tags: ["social", "esceptico", "veterano"], unlock: null },
+  { id: "per_pareja_joven", nombre: "una pareja de veintipocos", mote: "que vino a arreglar algo", desc: "se hablan bajito y se contradicen en los detalles de la misma historia", tags: ["social", "joven"], unlock: null },
+  { id: "per_tarotista_feria", nombre: "Liliana", mote: "que lee las cartas en una mesita de la feria", desc: "cobra lo que puede pagar el que se sienta y lo calcula bien", tags: ["guru", "comercio", "social"], unlock: null },
+  { id: "per_vigilador", nombre: "el vigilador nocturno de la obra", mote: "que lleva ocho meses sin ver a nadie", desc: "tiene una radio, un termo y unas ganas de hablar que dan miedo", tags: ["testigo", "social", "veterano"], unlock: null },
 
   // --- A5: fauna espiritual ---
   { id: "per_swami_gonzalez", nombre: "Swami Gonzalez", mote: "antes Rubén Gonzalez, de Ramos Mejía", desc: "túnica naranja impecable y acento de Ramos que no se le va ni con mantras", tags: ["guru", "chanta", "conurbano"], unlock: "A5" },
@@ -147,6 +165,17 @@ PICHI.COMPLICACIONES = [
   { id: "cmp_mucha_gente", texto: "hay el doble de gente de la que se había hablado", tags: ["social", "precario"], hint: { paranoia: 6 }, unlock: null },
   { id: "cmp_nadie_vino", texto: "iban a venir doce y vinieron tres, contándote", tags: ["social", "melancolia"], hint: {}, unlock: null },
   { id: "cmp_zapatilla", texto: "perdiste una zapatilla en algún momento de las últimas dos horas", tags: ["absurdo", "cuerpo"], hint: {}, unlock: null },
+
+  { id: "cmp_musica_vecino", texto: "el vecino está probando un parlante nuevo y lo está probando bien", tags: ["ruido", "social"], hint: {}, unlock: null },
+  { id: "cmp_pierde_agua", texto: "algo pierde agua desde el techo con una constancia que hipnotiza", tags: ["precario", "ruido"], hint: {}, unlock: null },
+  { id: "cmp_alguien_duerme", texto: "hay alguien durmiendo en el piso y nadie sabe desde cuándo", tags: ["social", "misterio"], hint: { paranoia: 5 }, unlock: null },
+  { id: "cmp_apuro_ajeno", texto: "alguien mira el reloj cada dos minutos y contagia un apuro que no es tuyo", tags: ["social", "personal"], hint: { paranoia: 6 }, unlock: null },
+  { id: "cmp_faltan_sillas", texto: "hay once personas y siete sillas y ya nadie va a mencionarlo", tags: ["social", "precario"], hint: {}, unlock: null },
+  { id: "cmp_olor_comida", texto: "de algún lado viene un olor a comida y hace catorce horas que no comés", tags: ["cuerpo", "social"], hint: { aguante: -3 }, unlock: null },
+  { id: "cmp_luz_titila", texto: "el tubo fluorescente titila en un ritmo que no cierra con nada", tags: ["ruido", "trip"], hint: { paranoia: 5 }, unlock: null },
+  { id: "cmp_todos_callados", texto: "hace cuatro minutos que nadie habla y ya se volvió un tema", tags: ["social", "emocional"], hint: { paranoia: 7 }, unlock: null },
+  { id: "cmp_llamada_ajena", texto: "alguien atiende el teléfono y sale al pasillo hablando bajo", tags: ["social", "misterio"], hint: { paranoia: 6 }, unlock: null },
+  { id: "cmp_calor", texto: "hace un calor de treinta y ocho grados y el ventilador es uno", tags: ["clima", "cuerpo"], hint: { aguante: -4 }, unlock: null },
 
   // --- policiales (los eventos de la rama A8 filtran por este tag) ---
   { id: "cmp_patrullero_esquina", texto: "hay un patrullero en la esquina con las luces apagadas y el motor prendido", tags: ["policial", "vigilancia"], hint: { paranoia: 10 }, unlock: null },
