@@ -72,6 +72,9 @@ PICHI.cerrarYPuntuar = function () {
   PICHI.meta.runs++;
 
   if (r.fin && r.fin.tipo === "victoria") PICHI.meta.victorias++;
+  if (r.fin && r.fin.tipo === "muerte") {
+    PICHI.meta.muertes[r.fin.causa] = (PICHI.meta.muertes[r.fin.causa] || 0) + 1;
+  }
   if (r.fin && r.fin.id && PICHI.meta.endings.indexOf(r.fin.id) === -1) PICHI.meta.endings.push(r.fin.id);
   if (r.puenteFinal && PICHI.meta.endings.indexOf(r.puenteFinal.id) === -1) PICHI.meta.endings.push(r.puenteFinal.id);
   for (i = 0; i < calc.logros.length; i++) {

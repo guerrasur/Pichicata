@@ -110,6 +110,8 @@ s { color: var(--tenue); }
 }
 .fila-kv span:last-child { text-align: right; }
 .fila-kv.total { border-top: var(--linea); margin-top: 6px; padding-top: 6px; }
+.fila-kv.logrado span:first-child { color: var(--acento); }
+.fila-kv.pendiente { opacity: 0.45; }
 
 /* ---------- HUD de stats ---------- */
 

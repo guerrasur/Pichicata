@@ -497,6 +497,19 @@ grupo("persistencia", () => {
   afirmar(P.Save.read(P.KEYS.run, null) === null || P.run.fase === "fin",
     "la run muerta no queda como run en curso");
 
+  // la colección necesita que las muertes queden registradas por causa
+  const P6 = cargar();
+  desbloquearTodo(P6);
+  for (let i = 0; i < 12; i++) jugarRun(P6, ESTRATEGIAS.kamikaze);
+  const causas = Object.keys(P6.meta.muertes);
+  const sumaMuertes = causas.reduce((a, c) => a + P6.meta.muertes[c], 0);
+  afirmar(causas.length > 0 && causas.every(c => P6.MUERTES[c]),
+    `las muertes se registran por causa para la colección (${causas.join(", ")})`,
+    "meta.muertes no registra causas válidas: la colección va a mostrar vacío");
+  afirmar(sumaMuertes <= P6.meta.runs,
+    "el total de muertes no supera el total de runs",
+    `${sumaMuertes} muertes en ${P6.meta.runs} runs`);
+
   // borrar todo limpia de verdad
   P.borrarTodo();
   afirmar(P.meta.ka === 0 && P.meta.unlocks.length === 0 && P.seen.comboCount === 0,
