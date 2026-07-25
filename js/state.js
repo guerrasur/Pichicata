@@ -47,6 +47,7 @@ PICHI.DEFAULT_META = {
   achievements: [],     // ids de logros
   runs: 0,
   victorias: 0,
+  muertes: {},          // causa -> veces, para la pantalla de colección
   record: { conciencia: 0, tramo: 0, turnos: 0, ka: 0 },
   ultimaRun: null       // resumen de la run anterior, para la pantalla de meta
 };
@@ -70,6 +71,7 @@ PICHI.run = null;
   if (!Array.isArray(m.endings)) m.endings = [];
   if (!Array.isArray(m.achievements)) m.achievements = [];
   if (!m.record) m.record = { conciencia: 0, tramo: 0, turnos: 0, ka: 0 };
+  if (!m.muertes || typeof m.muertes !== "object") m.muertes = {};
 
   var s = PICHI.seen;
   if (!s.combos || typeof s.combos !== "object") s.combos = {};

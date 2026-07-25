@@ -3,7 +3,7 @@
 window.PICHI = window.PICHI || {};
 
 PICHI.UI = {
-  pantalla: "menu",   // menu | juego | tienda | personajes | ayuda
+  pantalla: "menu",   // menu | juego | tienda | personajes | coleccion | ayuda
   ramaAbierta: "A"
 };
 
@@ -125,6 +125,7 @@ function renderMenu() {
     '<div class="fila-kv"><span>runs jugadas</span><span>' + m.runs + '</span></div>' +
     '<div class="fila-kv"><span>victorias</span><span>' + m.victorias + '</span></div>' +
     '<div class="fila-kv"><span>finales vistos</span><span>' + m.endings.length + '/' + PICHI.FINALES.length + '</span></div>' +
+    '<div class="fila-kv"><span>logros</span><span>' + m.achievements.length + '/' + PICHI.LOGROS.length + '</span></div>' +
     '<div class="fila-kv"><span>encarnación elegida</span><span>' + esc(pj.nombre) + '</span></div>' +
   '</div>' +
 
@@ -140,6 +141,7 @@ function renderMenu() {
     '<button data-act="nueva">[ arrancar el viaje ]</button>' +
     '<button data-act="tienda">[ karma acumulado · desbloqueos ]</button>' +
     '<button data-act="personajes">[ elegir encarnación ]</button>' +
+    '<button data-act="coleccion">[ colección · logros y finales ]</button>' +
     '<button data-act="ayuda">[ cómo funciona ]</button>' +
   '</div>';
 }
@@ -254,6 +256,7 @@ function renderFin() {
   html += '<div class="acciones">' +
     '<button data-act="tienda">[ gastar ' + PICHI.meta.ka + ' KA ]</button>' +
     '<button data-act="nueva">[ volver a nacer ]</button>' +
+    '<button data-act="coleccion">[ colección ]</button>' +
     '<button data-act="menu">[ menú ]</button>' +
     '</div></div>';
   return html;
@@ -338,6 +341,84 @@ function renderPersonajes() {
   return html;
 }
 
+function renderColeccion() {
+  var m = PICHI.meta, i, html = '';
+
+  html += '<h2>COLECCIÓN</h2><p class="subtitulo">Lo que juntaste en ' + m.runs +
+    ' run' + (m.runs === 1 ? '' : 's') + '. Lo que falta no dice qué es.</p>';
+
+  /* --- finales --- */
+  html += '<div class="bloque"><div class="titulo-min">finales · ' +
+    m.endings.length + '/' + PICHI.FINALES.length + '</div>';
+  for (i = 0; i < PICHI.FINALES.length; i++) {
+    var f = PICHI.FINALES[i];
+    var visto = m.endings.indexOf(f.id) !== -1;
+    var accesible = PICHI.tieneUnlock(f.unlock);
+    var nota;
+    if (visto) nota = f.tipo === "victoria" ? "iluminación" : (f.tipo === "neutro" ? "reencarnaste" : "");
+    else if (!accesible) nota = "requiere " + f.unlock;
+    else nota = "sin descubrir";
+    html += '<div class="fila-kv' + (visto ? ' logrado' : ' pendiente') + '">' +
+      '<span>' + (visto ? esc(f.nombre) : '???') + '</span>' +
+      '<span class="tenue">' + esc(nota) + '</span></div>';
+  }
+  html += '</div>';
+
+  /* --- muertes --- */
+  var totalMuertes = 0;
+  for (var k in m.muertes) totalMuertes += m.muertes[k];
+  html += '<div class="bloque"><div class="titulo-min">maneras de terminar mal · ' +
+    Object.keys(m.muertes).length + '/' + Object.keys(PICHI.MUERTES).length + '</div>';
+  for (var causa in PICHI.MUERTES) {
+    var veces = m.muertes[causa] || 0;
+    html += '<div class="fila-kv' + (veces ? ' logrado' : ' pendiente') + '">' +
+      '<span>' + (veces ? esc(PICHI.MUERTES[causa].nombre) : '???') + '</span>' +
+      '<span class="tenue">' + (veces ? veces + (veces === 1 ? ' vez' : ' veces') : 'todavía no') + '</span></div>';
+  }
+  if (totalMuertes) html += '<div class="fila-kv total"><span>total</span><span>' + totalMuertes + '</span></div>';
+  html += '</div>';
+
+  /* --- logros --- */
+  html += '<div class="bloque"><div class="titulo-min">logros · ' +
+    m.achievements.length + '/' + PICHI.LOGROS.length + '</div>';
+  for (i = 0; i < PICHI.LOGROS.length; i++) {
+    var l = PICHI.LOGROS[i];
+    var tiene = m.achievements.indexOf(l.id) !== -1;
+    html += '<div class="fila-kv' + (tiene ? ' logrado' : ' pendiente') + '">' +
+      '<span>' + esc(l.nombre) + '</span>' +
+      '<span class="tenue">' + esc(l.desc) + (tiene ? '' : ' · +' + l.ka + ' KA') + '</span></div>';
+  }
+  html += '</div>';
+
+  /* --- reliquias --- */
+  html += '<div class="bloque"><div class="titulo-min">reliquias desbloqueadas</div>';
+  for (i = 0; i < PICHI.RELIQUIAS.length; i++) {
+    var r = PICHI.RELIQUIAS[i];
+    var abierta = PICHI.tieneUnlock(r.id);
+    html += '<div class="fila-kv' + (abierta ? ' logrado' : ' pendiente') + '">' +
+      '<span>' + (abierta ? esc(r.nombre) : '???') + '</span>' +
+      '<span class="tenue">' + esc(abierta ? r.desc : 'en la rama C, ' + PICHI.UNLOCK_BY_ID[r.id].costo + ' KA') + '</span></div>';
+  }
+  html += '</div>';
+
+  /* --- records --- */
+  var d = PICHI.diagnostico();
+  html += '<div class="bloque"><div class="titulo-min">récords</div>' +
+    '<div class="fila-kv"><span>máxima Conciencia</span><span>' + m.record.conciencia + '/' + PICHI.META_CONCIENCIA + '</span></div>' +
+    '<div class="fila-kv"><span>tramo más lejano</span><span>' + (m.record.tramo || '—') + '</span></div>' +
+    '<div class="fila-kv"><span>run más larga</span><span>' + m.record.turnos + ' turnos</span></div>' +
+    '<div class="fila-kv"><span>mejor cosecha de KA</span><span>' + m.record.ka + '</span></div>' +
+    '<div class="fila-kv"><span>victorias</span><span>' + m.victorias + ' de ' + m.runs + '</span></div>' +
+    '<div class="fila-kv"><span>KA ganado en total</span><span>' + m.kaTotalHistorico + '</span></div>' +
+    '<div class="fila-kv"><span>textos distintos leídos</span><span>' + d.leidas + '</span></div>' +
+    '</div>';
+
+  html += '<div class="acciones">' +
+    '<button data-act="tienda">[ gastar ' + m.ka + ' KA ]</button>' +
+    '<button data-act="menu">[ volver al menú ]</button></div>';
+  return html;
+}
+
 function renderAyuda() {
   var d = PICHI.diagnostico();
   return '<h2>CÓMO FUNCIONA</h2>' +
@@ -390,6 +471,7 @@ PICHI.UI.render = function () {
   if (PICHI.UI.pantalla === "juego" && PICHI.run) html = renderJuego();
   else if (PICHI.UI.pantalla === "tienda") html = renderTienda();
   else if (PICHI.UI.pantalla === "personajes") html = renderPersonajes();
+  else if (PICHI.UI.pantalla === "coleccion") html = renderColeccion();
   else if (PICHI.UI.pantalla === "ayuda") html = renderAyuda();
   else html = renderMenu();
 
@@ -417,6 +499,7 @@ function accion(act) {
     case "rechazar": PICHI.rechazarEvento(); break;
     case "tienda": PICHI.UI.pantalla = "tienda"; PICHI.UI.render(); break;
     case "personajes": PICHI.UI.pantalla = "personajes"; PICHI.UI.render(); break;
+    case "coleccion": PICHI.UI.pantalla = "coleccion"; PICHI.UI.render(); break;
     case "ayuda": PICHI.UI.pantalla = "ayuda"; PICHI.UI.render(); break;
     case "menu": PICHI.UI.pantalla = "menu"; PICHI.UI.render(); break;
     case "purgar":

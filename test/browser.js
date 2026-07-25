@@ -142,6 +142,22 @@ async function foto(page, nombre) {
   await page.waitForSelector(".bloque.peligro");
   ok("la pantalla de ayuda renderiza");
 
+  await page.click('[data-act="menu"]');
+  await page.click('[data-act="coleccion"]');
+  await page.waitForSelector(".fila-kv.pendiente");
+  const coleccion = await page.evaluate(() => ({
+    bloques: document.querySelectorAll(".bloque").length,
+    logrados: document.querySelectorAll(".fila-kv.logrado").length,
+    pendientes: document.querySelectorAll(".fila-kv.pendiente").length,
+    ocultos: [...document.querySelectorAll(".fila-kv.pendiente")].filter(e => e.textContent.includes("???")).length
+  }));
+  afirmar(coleccion.bloques >= 5, `la colección muestra ${coleccion.bloques} secciones`,
+    `la colección solo muestra ${coleccion.bloques} secciones`);
+  afirmar(coleccion.ocultos > 0, `lo no descubierto se oculta con ??? (${coleccion.ocultos} filas)`,
+    "la colección espoilea contenido no descubierto");
+  info(`${coleccion.logrados} conseguidos · ${coleccion.pendientes} pendientes`);
+  await foto(page, "6-coleccion");
+
   /* ---------- persistencia entre recargas ---------- */
   console.log("\n\x1b[1mpersistencia\x1b[0m");
   await page.click('[data-act="menu"]');

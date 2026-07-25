@@ -321,6 +321,14 @@ Dos reglas que el motor no aplica solo, pero que las pruebas sí chequean:
 Corré `node test/run.js` después de tocar contenido: además de esas dos reglas verifica
 que no hayas dejado un evento con pool chico ni un slot sin candidatos.
 
+## Colección
+
+El menú tiene una pantalla de colección que cierra el círculo del meta-progreso: los 7
+finales (los no descubiertos aparecen como `???`, sin espoilear), las 5 maneras de terminar
+mal con cuántas veces te tocó cada una, los 14 logros con lo que falta para cada uno, las 8
+reliquias con su costo, y los récords: máxima Conciencia, tramo más lejano, run más larga,
+mejor cosecha de KA y cuántos textos distintos leíste en total.
+
 ## Atajos
 
 `1`-`5` eligen opción, `Espacio` o `Enter` avanzan. La run se guarda en cada turno: podés
