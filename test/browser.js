@@ -78,7 +78,36 @@ async function foto(page, nombre) {
     `el evento tiene ${parrafos.length} párrafos cortos`, `párrafos fuera de rango: ${parrafos.length}`);
   const opciones = await page.$$eval(".opcion", els => els.length);
   afirmar(opciones >= 2 && opciones <= 6, `${opciones} opciones de decisión`, `opciones fuera de rango: ${opciones}`);
+
+  const elenco = await page.$$eval(".elenco span", els => els.map(e => e.textContent));
+  afirmar(elenco.length === 3, `el HUD muestra el elenco de la run (${elenco.join(" · ")})`,
+    `el HUD muestra ${elenco.length} personas del elenco`);
   await foto(page, "2-evento");
+
+  // el dado tiene que verse ANTES de elegir, no después
+  let previos = 0, vistos = 0;
+  for (let t = 0; t < 12; t++) {
+    if (!(await page.$(".opcion[data-op]"))) break;
+    previos += await page.$$eval(".dado-previo", els => els.length);
+    await page.keyboard.press("1");
+    await page.waitForTimeout(25);
+    if (await page.$(".tirada")) {
+      vistos++;
+      const txt = (await page.textContent(".tirada")).replace(/\s+/g, " ").trim();
+      if (t === 0 || vistos === 1) info("resultado del dado: " + txt);
+      const clase = await page.$eval(".tirada", e => e.className);
+      if (!/critico|pifia|exito|fallo/.test(clase)) mal("la tirada no informa el grado: " + clase);
+    }
+    if (await page.$('[data-act="continuar"]')) {
+      await page.click('[data-act="continuar"]');
+      await page.waitForTimeout(25);
+    }
+  }
+  afirmar(previos > 0, `el pronóstico del dado se muestra antes de elegir (${previos} veces en 12 turnos)`,
+    "el dado no se anuncia antes de elegir: el riesgo es sorpresa y no decisión");
+  afirmar(vistos > 0, `el resultado del dado se muestra al resolver (${vistos} veces)`,
+    "el resultado del dado no se muestra");
+  await foto(page, "3-dado");
 
   // alternamos teclado y mouse hasta llegar a un final
   let turnos = 0, i = 0;
@@ -98,7 +127,7 @@ async function foto(page, nombre) {
   if (await page.$(".fin")) {
     info("final: " + (await page.textContent(".fin h2")).trim() +
       " · " + (await page.textContent(".fila-kv.total")).replace(/\s+/g, " ").trim());
-    await foto(page, "3-final");
+    await foto(page, "4-final");
   }
 
   /* ---------- tienda ---------- */
@@ -127,7 +156,7 @@ async function foto(page, nombre) {
     if (!n) mal(`la rama ${rama} quedó vacía`);
   }
   ok("las 5 ramas del árbol renderizan");
-  await foto(page, "4-tienda");
+  await foto(page, "5-tienda");
 
   /* ---------- otras pantallas ---------- */
   console.log("\n\x1b[1mpantallas\x1b[0m");
@@ -156,7 +185,7 @@ async function foto(page, nombre) {
   afirmar(coleccion.ocultos > 0, `lo no descubierto se oculta con ??? (${coleccion.ocultos} filas)`,
     "la colección espoilea contenido no descubierto");
   info(`${coleccion.logrados} conseguidos · ${coleccion.pendientes} pendientes`);
-  await foto(page, "6-coleccion");
+  await foto(page, "7-coleccion");
 
   /* ---------- persistencia entre recargas ---------- */
   console.log("\n\x1b[1mpersistencia\x1b[0m");
@@ -222,7 +251,7 @@ async function foto(page, nombre) {
   afirmar(distorsion.deformadas >= 8, `con Efecto alto el texto se deforma (${distorsion.deformadas}/10)`,
     `la distorsión casi no actúa: solo ${distorsion.deformadas}/10 muestras cambiaron`);
   info("Efecto 95 → " + distorsion.muestra.slice(0, 60));
-  await foto(page, "5-tema");
+  await foto(page, "6-tema");
 
   /* ---------- responsive ---------- */
   console.log("\n\x1b[1mresponsive\x1b[0m");

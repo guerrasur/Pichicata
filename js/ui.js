@@ -81,13 +81,25 @@ function renderStats() {
     rel = '<div class="reliquias">reliquias: ' + esc(nombres.join(" · ")) + '</div>';
   }
 
+  var elenco = "";
+  var gente = PICHI.elencoDeLaRun();
+  if (gente.length) {
+    var partes = [];
+    for (i = 0; i < gente.length; i++) {
+      var g = gente[i];
+      partes.push('<span class="' + (g.encuentros ? 'conocido' : 'por-conocer') + '">' +
+        esc(g.pieza.nombre) + (g.encuentros > 1 ? ' ×' + g.encuentros : '') + '</span>');
+    }
+    elenco = '<div class="elenco">en el viaje: ' + partes.join(' · ') + '</div>';
+  }
+
   var def4 = PICHI.tramoDef(PICHI.run.tramo);
   return '<div class="hud">' +
     '<div class="hud-top">' +
       '<span class="tramo">' + esc(PICHI.nombreTramo(PICHI.run.tramo)) + '</span>' +
       '<span class="turno">turno ' + PICHI.run.turno + ' · paso ' + Math.min(PICHI.run.turnoEnTramo, def4.turnos) + '/' + def4.turnos + '</span>' +
     '</div>' +
-    '<div class="stats">' + out + '</div>' + rel +
+    '<div class="stats">' + out + '</div>' + elenco + rel +
     '</div>';
 }
 
@@ -177,9 +189,13 @@ function renderJuego() {
     for (i = 0; i < ev.opciones.length; i++) {
       var op = ev.opciones[i];
       var spoiler = op.spoiler ? '<span class="spoiler">' + esc(op.spoiler) + '</span>' : "";
+      var dado = op.dado
+        ? '<span class="dado-previo" title="tirada de dado">⚄ ' + esc(op.dado.etiqueta) + '</span>'
+        : "";
       if (op.disponible) {
-        html += '<button class="opcion" data-op="' + i + '">' +
-          '<span class="num">' + (i + 1) + '.</span> ' + esc(PICHI.UI.distorsionar(op.label, efecto)) + spoiler + '</button>';
+        html += '<button class="opcion' + (op.dado ? ' con-dado' : '') + '" data-op="' + i + '">' +
+          '<span class="num">' + (i + 1) + '.</span> ' + esc(PICHI.UI.distorsionar(op.label, efecto)) +
+          dado + spoiler + '</button>';
       } else {
         html += '<div class="opcion bloqueada"><span class="num">' + (i + 1) + '.</span> <s>' + esc(op.label) + '</s>' +
           (op.motivo ? ' <span class="req">requiere ' + esc(op.motivo) + '</span>' : ' <span class="req">no disponible</span>') + '</div>';
@@ -197,6 +213,7 @@ function renderJuego() {
   var res = r.resolucion;
   html += '<div class="evento resolucion ' + cls + '">';
   html += '<div class="elegiste">elegiste: ' + esc(res.label) + '</div>';
+  if (res.tirada) html += renderTirada(res.tirada);
   for (var j = 0; j < res.textos.length; j++) {
     html += '<p>' + esc(PICHI.UI.distorsionar(res.textos[j], efecto)) + '</p>';
   }
@@ -205,6 +222,22 @@ function renderJuego() {
   html += '<div class="opciones"><button class="opcion" data-act="continuar"><span class="num">→</span> seguir</button></div>';
   html += '</div>';
   return html;
+}
+
+/* El dado, después de tirar. Se muestra la cara, el modificador y el resultado
+   contra la dificultad: el jugador tiene que poder auditar por qué salió así. */
+function renderTirada(t) {
+  var caras = { 1: "⚀", 2: "⚁", 3: "⚂", 4: "⚃", 5: "⚄", 6: "⚅" };
+  var icono = caras[t.cara] || "⚄";
+  var signo = t.mod >= 0 ? "+" : "";
+  var abrev = { conciencia: "CON", karma: "KAR", aguante: "AGU", mangos: "$", efecto: "EFE", paranoia: "PAR" };
+  return '<div class="tirada ' + t.grado + '">' +
+    '<span class="tirada-icono">' + icono + '</span>' +
+    '<span class="tirada-cuenta">' + t.cara + ' <span class="tenue">' + signo + t.mod + ' ' +
+      esc(abrev[t.stat] || t.stat) + '</span> = <strong>' + t.total + '</strong>' +
+      ' <span class="tenue">vs ' + t.cd + '</span></span>' +
+    '<span class="tirada-grado">' + esc(PICHI.Dados.nombreGrado(t.grado)) + '</span>' +
+    '</div>';
 }
 
 function renderDeltas(deltas) {
@@ -439,6 +472,24 @@ function renderAyuda() {
   'Necesitás Conciencia ' + PICHI.GATE_TRAMO_4 + ' al terminar el Tramo III para acceder al Ascenso, y llegar a ' +
   PICHI.META_CONCIENCIA + ' para iluminarte. Qué final te toca lo define el cruce de Karma, Efecto y Mangos. ' +
   'Si sobrevivís sin iluminarte, reencarnás: igual te llevás el KA.' +
+  '</p></div>' +
+
+  '<div class="bloque"><div class="titulo-min">el dado</div><p>' +
+  'Algunas acciones se pueden ejecutar bien o mal. Esas muestran su tirada <strong>antes</strong> de que ' +
+  'elijas —<span class="dado-previo">⚄ d20 +2 AGU · 65%</span>— porque el riesgo tiene que ser información con la ' +
+  'que decidís, no una sorpresa. Se tira un d20 y se le suma un modificador que sale de cuánto te sobra ' +
+  'del stat que la acción pide; hay que llegar a 11.' +
+  '</p><p>' +
+  'El <strong>20 es crítico</strong> y el <strong>1 es pifia</strong>, siempre: el mejor preparado se puede comer un papelón y el ' +
+  'más roto puede tener un momento. En un crítico lo bueno rinde más y lo malo pega menos; en una pifia, al revés. ' +
+  'Las opciones sin dado son seguras, y ese contraste es el que hace que el dado importe.' +
+  '</p></div>' +
+
+  '<div class="bloque"><div class="titulo-min">el elenco</div><p>' +
+  'Cada run sortea tres personas que van a volver a aparecer: un chanta, alguien de la calle y alguien que te ' +
+  'cuida. Están en la barra de arriba, y las que ya cruzaste se marcan con las veces que las viste. ' +
+  'También aparece gente nueva, pero el viaje tiene un elenco en vez de ser una sucesión de desconocidos. ' +
+  'En la próxima run el elenco es otro.' +
   '</p></div>' +
 
   '<div class="bloque"><div class="titulo-min">no repetición</div><p>' +

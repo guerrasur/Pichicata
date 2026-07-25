@@ -25,7 +25,7 @@ PICHI.addEvents([
     { label: "Abrir la puerta con la tele.", efectos: { conciencia: 25, karma: 8, paranoia: 18, aguante: -10 },
       resultado: ["Está todo. Está exacto. Está tu vieja de espaldas y no te das vuelta a mirarla porque sabés cómo funciona esto.",
                   "Abrís y hay una habitación de tres metros por tres con una tele encendida y nadie. Lloras parado en la puerta."] },
-    { label: "Seguir caminando hasta el final.", efectos: { conciencia: 20, paranoia: 20, aguante: -15 },
+    { label: "Seguir caminando hasta el final.", pericia: "conciencia", efectos: { conciencia: 20, paranoia: 20, aguante: -15 },
       resultado: ["No hay final. Eso era la enseñanza y era gratis y la pagaste con dos horas.",
                   "Después de mucho caminar el pasillo desemboca en el mismo lugar donde arrancaste, y ahí entendés algo grande."] },
     { label: "Sentarte en el piso del pasillo y esperar.", efectos: { conciencia: 22, paranoia: -12 }, medita: true,
@@ -53,7 +53,7 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Entrar por la puerta de los empleados.", efectos: { conciencia: 25, paranoia: 22, aguante: -10 },
+    { label: "Entrar por la puerta de los empleados.", pericia: "aguante", efectos: { conciencia: 25, paranoia: 22, aguante: -10 },
       resultado: ["Del otro lado hay un depósito y en el depósito hay una silla y en la silla hay alguien que te estaba esperando de espaldas.",
                   "Es un pasillo de servicio que da a otro supermercado idéntico. Cerrás la puerta con mucho cuidado."] },
     { label: "Llenar un carrito y pasar por caja.", efectos: { conciencia: 18, karma: 5, paranoia: 15 },
@@ -84,13 +84,13 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Meterte al agua.", efectos: { conciencia: 28, paranoia: 20, aguante: -15 },
+    { label: "Meterte al agua.", pericia: "aguante", efectos: { conciencia: 28, paranoia: 20, aguante: -15 },
       resultado: ["Caminás hacia adentro. No te tapa nunca. Después de mucho caminar te das vuelta y la orilla está a dos metros.",
                   "Entrás y no pasa nada y esa nada es enorme. Volvés seco y distinto."] },
     { label: "Sentarte al lado de {personaje.nombre}.", efectos: { conciencia: 22, karma: 12, paranoia: -12 },
       resultado: ["Se sientan juntos sin hablar mucho tiempo. En algún momento dice una frase de seis palabras que te resuelve un problema de años.",
                   "No se da vuelta ni una vez. Pero cuando te vas, dice «gracias». Y no sabés por qué."] },
-    { label: "Seguir las huellas.", efectos: { conciencia: 20, paranoia: 25, aguante: -12 },
+    { label: "Seguir las huellas.", pericia: "conciencia", efectos: { conciencia: 20, paranoia: 25, aguante: -12 },
       resultado: ["Las seguís hasta el agua. En la orilla hay un par de zapatillas prolijamente acomodadas y son de tu talle.",
                   "Las huellas se pierden. Cuando te das vuelta, tus propias huellas también se están borrando."] },
     { label: "Gritarle al mar.", efectos: { conciencia: 16, karma: 5, paranoia: 12, aguante: -8 },
@@ -118,10 +118,10 @@ PICHI.addEvents([
     { label: "Sentarte y tomar el mate/café que está servido.", efectos: { conciencia: 25, karma: 15, paranoia: -15, aguante: 12 },
       resultado: ["Te sentás y tomás. Está a la temperatura correcta. No hablás. Es de las mejores cosas que te pasaron.",
                   "Tomás en silencio y en algún momento te apoya una mano en el hombro al pasar y ya está, ya alcanzó."] },
-    { label: "Hablarle.", efectos: { conciencia: 22, karma: 18, paranoia: 15 },
+    { label: "Hablarle.", pericia: "karma", efectos: { conciencia: 22, karma: 18, paranoia: 15 },
       resultado: ["Le decís lo que nunca le dijiste. No se da vuelta. Sigue lavando. Pero contesta, y contesta bien.",
                   "Hablás cuatro minutos seguidos. Cuando terminás, dice: «ya sé, m'hijo». Y sigue con los platos."] },
-    { label: "Mirar por la ventana.", efectos: { conciencia: 20, paranoia: 28 },
+    { label: "Mirar por la ventana.", pericia: "conciencia", efectos: { conciencia: 20, paranoia: 28 },
       resultado: ["Mirás. No es el patio. No es nada que puedas describir. Cerrás la cortina y te sentás de nuevo.",
                   "Del otro lado hay una ciudad que no existe, de noche, con las luces prendidas. Te quedás mirando demasiado."] },
     { label: "Irte de la cocina antes de romper algo.", efectos: { conciencia: 14, paranoia: -12, karma: 5, efecto: -15 },
@@ -178,10 +178,10 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Entrar a la iglesia sin techo.", efectos: { conciencia: 24, karma: 10, paranoia: 15 },
+    { label: "Entrar a la iglesia sin techo.", pericia: "aguante", efectos: { conciencia: 24, karma: 10, paranoia: 15 },
       resultado: ["Adentro hay bancos de cemento y el cielo. Te sentás en uno. No rezás. Igual pasa algo.",
                   "Hay una hornacina vacía donde estuvo un santo cuarenta años. Le dejás {objeto} adentro."] },
-    { label: "Levantar un objeto del barro y llevártelo.", efectos: { conciencia: 15, karma: -8, paranoia: 18 }, daReliquia: true,
+    { label: "Levantar un objeto del barro y llevártelo.", pericia: "aguante", efectos: { conciencia: 15, karma: -8, paranoia: 18 }, daReliquia: true,
       resultado: ["Te llevás algo que no es tuyo de un lugar que no es de nadie. Esa ecuación no cierra y lo vas a sentir.",
                   "Lo limpias con la manga. Es más viejo que vos y ahora es tuyo."] },
     { label: "Quedarte hasta que caiga el sol.", efectos: { conciencia: 20, aguante: -15, paranoia: -12 }, medita: true,
@@ -245,7 +245,7 @@ PICHI.addEvents([
     { label: "Aprovechar el tiempo detenido.", efectos: { conciencia: 25, paranoia: 15 }, medita: true,
       resultado: ["Si el tiempo no corre, no hay apuro. Te sentás y meditás lo que en cualquier otra circunstancia sería una hora.",
                   "Usás el tiempo roto para pensar una cosa entera de principio a fin. Nunca lo habías hecho."] },
-    { label: "Romper el reloj.", efectos: { paranoia: 22, conciencia: 12, karma: -8 },
+    { label: "Romper el reloj.", pericia: "aguante", efectos: { paranoia: 22, conciencia: 12, karma: -8 },
       resultado: ["Lo tirás al piso. La hora sigue siendo 4:12 en todos los otros dispositivos. Rompiste un reloj inocente.",
                   "El vidrio se raja y el minutero avanza un minuto. 4:13. Y ahí se queda."] },
     { label: "Preguntarle la hora a alguien.", efectos: { conciencia: 15, paranoia: 18, karma: 3 },
@@ -274,7 +274,7 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Escuchar todo lo que dicen de vos.", efectos: { conciencia: 28, karma: 5, paranoia: 20, aguante: -10 },
+    { label: "Escuchar todo lo que dicen de vos.", pericia: "conciencia", efectos: { conciencia: 28, karma: 5, paranoia: 20, aguante: -10 },
       resultado: ["Escuchás dos horas. Cuatro cosas te destruyen y una te salva. La que te salva la dice el que menos esperabas.",
                   "Aparecen dos personas que no sabías que te querían. Eso solo justifica todo el evento."] },
     { label: "Ir a escuchar al que está en el rincón.", efectos: { conciencia: 22, karma: -8, paranoia: 22 },
@@ -305,7 +305,7 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Entrar veinte metros y volver.", efectos: { conciencia: 20, paranoia: 20, aguante: -10 },
+    { label: "Entrar veinte metros y volver.", pericia: "aguante", efectos: { conciencia: 20, paranoia: 20, aguante: -10 },
       resultado: ["Veinte metros contados. A los dieciocho escuchás una respiración que no es tuya. Volvés caminando, no corriendo, y eso te salva.",
                   "Entrás, contás, volvés. Cumplís el plan exactamente. Vas a soñar con los dos metros que no caminaste."] },
     { label: "Entrar hasta donde llegue el coraje.", efectos: { conciencia: 28, paranoia: 30, aguante: -18 },
@@ -373,13 +373,13 @@ PICHI.addEvents([
     { label: "Decírselo.", efectos: { conciencia: 20, karma: 10, paranoia: 15 },
       resultado: ["Se ríe. «Estás muy dado vuelta», dice, con cariño. Pero después, más bajo: «no le digas a nadie».",
                   "«Ya sé», dice, y sigue lavando. Y con eso te desarma el resto del tramo."] },
-    { label: "Quedarte mirando en silencio.", efectos: { conciencia: 25, paranoia: 12 },
+    { label: "Quedarte mirando en silencio.", pericia: "conciencia", efectos: { conciencia: 25, paranoia: 12 },
       resultado: ["Mirás cuarenta minutos. La luz no cambia. Vos sí.",
                   "No decís nada. Lo miras hacer cosas comunes con luz alrededor. Es la mejor cosa que viste."] },
     { label: "Preguntarle a otro si ve lo mismo.", efectos: { conciencia: 12, paranoia: 22 },
       resultado: ["«¿Qué?», te dice, y te mira las pupilas. Eso zanja el tema y no lo zanja.",
                   "Nadie ve nada. Volvés a mirar y sigue ahí. Ahora tenés un problema de dos frentes."] },
-    { label: "Pedirle que te enseñe.", efectos: { conciencia: 22, karma: 15, aguante: -8 },
+    { label: "Pedirle que te enseñe.", pericia: "karma", efectos: { conciencia: 22, karma: 15, aguante: -8 },
       resultado: ["«No hay nada que enseñar», dice. «Ayudame con esto.» Y te pasa un balde. Y esa es la enseñanza.",
                   "Te pone a trabajar al lado suyo cuatro horas. En la hora tres entendés."] }
   ]

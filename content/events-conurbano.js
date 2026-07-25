@@ -21,13 +21,13 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Entregarte al lugar sin ironía.", efectos: { conciencia: 16, karma: 10, paranoia: -10 },
+    { label: "Entregarte al lugar sin ironía.", pericia: "conciencia", efectos: { conciencia: 16, karma: 10, paranoia: -10 },
       resultado: ["Dejás de mirar el compresor y empezás a mirar lo que pasa. Ahí arranca de verdad.",
                   "El galpón desaparece a los veinte minutos. Queda la ronda. Funciona."] },
     { label: "Comentar en voz alta lo precario del lugar.", efectos: { conciencia: 5, karma: -10, paranoia: 8 },
       resultado: ["Se te ríe uno solo. {^personaje.nombre} te escucha y no dice nada, y eso te va a costar más adelante.",
                   "Hacés el chiste. Nadie lo acompaña. El precario acá no es un chiste: es la condición."] },
-    { label: "Ayudar a terminar de armar el altar.", efectos: { karma: 15, conciencia: 12, aguante: -5 },
+    { label: "Ayudar a terminar de armar el altar.", pericia: "karma", efectos: { karma: 15, conciencia: 12, aguante: -5 },
       resultado: ["Cargás cuatro cajones y acomodás velas cuarenta minutos. Nadie más ayudó. {^personaje.nombre} te lo va a devolver.",
                   "Terminan juntos. Antes de empezar ya te pasó algo."] },
     { label: "Preguntar dónde está el baño y qué se hace con el balde.", efectos: { conciencia: 8, paranoia: -8, aguante: 5 },
@@ -83,7 +83,7 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Mirar el remolino hasta el final.", efectos: { conciencia: 18, paranoia: 12, efecto: 10 },
+    { label: "Mirar el remolino hasta el final.", pericia: "conciencia", efectos: { conciencia: 18, paranoia: 12, efecto: 10 },
       resultado: ["Cuarenta minutos de agua girando. Entendés una cosa sobre la repetición y no la vas a poder explicar.",
                   "El remolino se deshace de golpe y sentís una pérdida real, lo cual es un dato clínico."] },
     { label: "Meter la mano en el agua.", efectos: { aguante: -12, conciencia: 12, karma: 3 },
@@ -93,7 +93,7 @@ PICHI.addEvents([
     { label: "Irte a un lugar con menos toxinas.", efectos: { aguante: 8, conciencia: 5, paranoia: -8 },
       resultado: ["Caminan tres cuadras hasta una plaza. Es mucho mejor y {personaje.nombre} no lo va a admitir nunca.",
                   "«Sos delicado», te dice. Te vas igual. Tenías razón."] },
-    { label: "Tirar {objeto} al agua como ofrenda.", efectos: { karma: 5, conciencia: 14, paranoia: 8 },
+    { label: "Tirar {objeto} al agua como ofrenda.", pericia: "aguante", efectos: { karma: 5, conciencia: 14, paranoia: 8 },
       resultado: ["Lo tirás. Se hunde despacio y con dignidad. Los dos se quedan callados un rato largo.",
                   "Flota. Se queda flotando. La ofrenda rechazada es peor que la ofrenda no hecha."] }
   ]
@@ -116,7 +116,7 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Escuchar la última canción entera.", efectos: { conciencia: 16, karma: 12, paranoia: -15 },
+    { label: "Escuchar la última canción entera.", pericia: "conciencia", efectos: { conciencia: 16, karma: 12, paranoia: -15 },
       resultado: ["Se apaga el parlante y sigue sin música. Once personas escuchan un bolero a capela en un andén. Es el mejor momento del tramo.",
                   "Termina y hay un aplauso de cuatro personas. Se ríe. Se va sin pedir nada."] },
     { label: "Darle plata.", requiere: { stats: { mangos: { min: 100 } } }, requisitoTexto: "$100",
@@ -126,7 +126,7 @@ PICHI.addEvents([
     { label: "Dormir sentado en el banco.", efectos: { aguante: 15, efecto: -18, paranoia: -8 },
       resultado: ["Cuarenta minutos de banco de cemento. El cuerpo agarra lo que le den.",
                   "Te despierta el tren. Nadie te robó nada. El conurbano a veces te perdona."] },
-    { label: "Cantar con él.", efectos: { karma: 18, conciencia: 14, aguante: -5, paranoia: -18 },
+    { label: "Cantar con él.", pericia: "conciencia", efectos: { karma: 18, conciencia: 14, aguante: -5, paranoia: -18 },
       resultado: ["Cantás mal y fuerte. Se suman dos más. Por cuatro minutos el andén es otra cosa.",
                   "No sabés la letra y la inventás. Nadie protesta. Se armó algo."] }
   ]
@@ -149,7 +149,7 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Sacar el pasaje y esperar lo que haya que esperar.", efectos: { mangos: -400, conciencia: 10, aguante: -8, paranoia: -5 },
+    { label: "Sacar el pasaje y esperar lo que haya que esperar.", pericia: "aguante", efectos: { mangos: -400, conciencia: 10, aguante: -8, paranoia: -5 },
       resultado: ["Tres horas de terminal. Comés dos facturas y ves pasar el país entero por una plataforma.",
                   "Sale con dos horas de retraso. Nadie se sorprende. Subís y dormís hasta el amanecer."] },
     { label: "Preguntarle a {personaje.nombre} qué conviene.", efectos: { conciencia: 12, karma: 8, mangos: -250 },
@@ -181,7 +181,7 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Tomar el mando de la logística.", efectos: { conciencia: 15, karma: 18, aguante: -12, paranoia: 8 },
+    { label: "Tomar el mando de la logística.", pericia: "conciencia", efectos: { conciencia: 15, karma: 18, aguante: -12, paranoia: 8 },
       resultado: ["Armás turnos, repartís baldes, conseguís papel. Sos el héroe invisible del fin de semana y nadie te lo va a decir.",
                   "En veinte minutos tenés un sistema que funciona. {^personaje.nombre} lo presenta como propio."] },
     { label: "Agarrar el mejor lugar y no decir nada.", efectos: { aguante: 15, karma: -12, paranoia: 8 },
@@ -190,7 +190,7 @@ PICHI.addEvents([
     { label: "Renunciar a tu lugar y dormir afuera.", efectos: { aguante: -10, karma: 22, conciencia: 16 },
       resultado: ["Dormís en una reposera abajo de un limonero. Es lo mejor que te podía pasar y no lo hiciste por eso.",
                   "Cedés el colchón. A la mañana tres personas te tratan distinto."] },
-    { label: "Meterte en la pileta con la rana muerta.", efectos: { aguante: -10, conciencia: 12, karma: 8, paranoia: -12 },
+    { label: "Meterte en la pileta con la rana muerta.", pericia: "aguante", efectos: { aguante: -10, conciencia: 12, karma: 8, paranoia: -12 },
       resultado: ["Sacás la rana primero. Después te metés. Es un orden de operaciones que habla bien de vos.",
                   "Te metés sin sacar nada. Nadie te acompaña. Es tuya la pileta y el problema."] }
   ]
@@ -216,14 +216,14 @@ PICHI.addEvents([
     { label: "Cambiar de tema con violencia.", efectos: { karma: 8, conciencia: 5, paranoia: 8 },
       resultado: ["Metés un tema de fútbol como un topadora. Funciona a medias, que es lo máximo disponible.",
                   "Hablás de la inflación durante cuatro minutos hasta que alguien se te suma. Salvaste el asado y no el vínculo."] },
-    { label: "Sostener el silencio.", efectos: { conciencia: 16, karma: 5, paranoia: 12 },
+    { label: "Sostener el silencio.", pericia: "aguante", efectos: { conciencia: 16, karma: 5, paranoia: 12 },
       resultado: ["Nadie habla dos minutos completos. Después alguien llora y después se arregla de verdad. El silencio hizo el trabajo.",
                   "Aguantás y aguantan todos. Se dicen cosas después que no se hubieran dicho nunca."] },
     { label: "Ponerte del lado de {personaje2.nombre}.", efectos: { karma: 15, conciencia: 10, paranoia: 10 },
       riesgo: { prob: 0.35, efectos: { karma: -10, paranoia: 12 }, resultado: ["Elegiste el bando equivocado con información incompleta. En una hora te vas a enterar del resto de la historia."] },
       resultado: ["Le pones el cuerpo. Te lo va a agradecer por diez años.",
                   "«Che, pará», decís, y con eso alcanza para frenar todo."] },
-    { label: "Levantarte a lavar los platos.", efectos: { karma: 12, conciencia: 12, aguante: -5, paranoia: -10 },
+    { label: "Levantarte a lavar los platos.", pericia: "aguante", efectos: { karma: 12, conciencia: 12, aguante: -5, paranoia: -10 },
       resultado: ["Te vas a la cocina y te quedás cuarenta minutos. Se suman dos. Ahí se arregla, en la pileta, no en la mesa.",
                   "Los platos son una excusa muy antigua y muy eficaz."] }
   ]
@@ -251,10 +251,10 @@ PICHI.addEvents([
     { label: "Comprar y cortarla rápido.", efectos: { mangos: -250, efecto: 5, karma: -5 }, flags: { set: ["tiene_faso"] },
       resultado: ["«Estoy apurado», decís. Se ofende un cinco por ciento y te lo va a cobrar la próxima.",
                   "Transacción de noventa segundos. Eficiente y triste."] },
-    { label: "Discutirle a Nietzsche.", efectos: { conciencia: 15, karma: -5, paranoia: 5, mangos: -250 }, flags: { set: ["tiene_faso"] },
+    { label: "Discutirle a Nietzsche.", pericia: "karma", efectos: { conciencia: 15, karma: -5, paranoia: 5, mangos: -250 }, flags: { set: ["tiene_faso"] },
       resultado: ["Discuten veinte minutos en una esquina. Gana él, no por argumento sino por resistencia.",
                   "Le señalás que eso no es lo que dice el libro. «Bueno», dice, «yo lo leo así». Es una posición sólida."] },
-    { label: "Pedirle consejo de verdad.", efectos: { conciencia: 18, karma: 10, paranoia: -12 },
+    { label: "Pedirle consejo de verdad.", pericia: "karma", efectos: { conciencia: 18, karma: 10, paranoia: -12 },
       resultado: ["«No compres hoy», te dice, mirándote la cara. «Andá a comer algo.» Es el mejor consejo del día y le costó una venta.",
                   "Te escucha y te dice tres cosas concretas. Ninguna es mística. Las tres sirven."] }
   ]
@@ -285,7 +285,7 @@ PICHI.addEvents([
     { label: "Ponerte a charlar sin comprar.", efectos: { conciencia: 14, karma: 12, aguante: -3 },
       resultado: ["Cuarenta minutos con ella. Te cuenta de dónde viene cada cosa de la mesa. Es un museo y es gratis.",
                   "No compras nada y te vas con más de lo que ibas a llevar."] },
-    { label: "Vender algo tuyo ahí mismo.", efectos: { mangos: 250, conciencia: 5, karma: -3 },
+    { label: "Vender algo tuyo ahí mismo.", pericia: "karma", efectos: { mangos: 250, conciencia: 5, karma: -3 },
       resultado: ["Le vendés la campera que traías puesta. Vas a extrañarla a las cuatro de la mañana.",
                   "Se lo compra sin regatear y con eso te dice algo sobre lo que valía."] }
   ]
@@ -307,7 +307,7 @@ PICHI.addEvents([
     ]}
   ],
   opciones: [
-    { label: "Jugar al arco solo hasta cansarte.", efectos: { aguante: -15, conciencia: 15, karma: 10, paranoia: -20, efecto: -15 },
+    { label: "Jugar al arco solo hasta cansarte.", pericia: "aguante", efectos: { aguante: -15, conciencia: 15, karma: 10, paranoia: -20, efecto: -15 },
       resultado: ["Cuarenta minutos pateando al arco vacío. Es lo más limpio que hiciste en semanas.",
                   "Metés diecisiete de veinte. En el diecisiete gritás un gol y te escuchás gritar y te reís solo."] },
     { label: "Acostarte en el centro del campo.", efectos: { conciencia: 18, paranoia: -18, aguante: 8, efecto: -10 },
@@ -346,7 +346,7 @@ PICHI.addEvents([
     { label: "Comprar de todo por si acaso.", efectos: { mangos: -600, conciencia: 5, paranoia: 12 }, daReliquia: true,
       resultado: ["Salís con una bolsa de nylon con doce productos. La ansiedad también compra.",
                   "Seiscientos pesos de protección espiritual. Algo de todo eso va a servir por pura estadística."] },
-    { label: "Discutirle que esto es superstición.", efectos: { conciencia: 8, karma: -10, paranoia: 10 },
+    { label: "Discutirle que esto es superstición.", pericia: "karma", efectos: { conciencia: 8, karma: -10, paranoia: 10 },
       resultado: ["Te escucha entero. «Y bueno», dice al final, y sigue acomodando velas. Perdiste sin que nadie compitiera.",
                   "«¿Y vos qué viniste a hacer acá entonces?» Fin de la discusión."] },
     { label: "Preguntarle qué ve.", efectos: { conciencia: 18, paranoia: 15, karma: 5 },
@@ -377,7 +377,7 @@ PICHI.addEvents([
     { label: "Preguntarle cuánto lleva ahí.", efectos: { conciencia: 18, karma: 10 },
       resultado: ["«Once años», dice. Y después: «vine por tres meses». Se ríe. No es una risa alegre y no es triste.",
                   "Te cuenta la historia de la pensión, que son cuarenta historias, y las cuenta bien."] },
-    { label: "Contarle lo que estás buscando.", efectos: { conciencia: 12, karma: 12, paranoia: -12 },
+    { label: "Contarle lo que estás buscando.", pericia: "karma", efectos: { conciencia: 12, karma: 12, paranoia: -12 },
       resultado: ["Escucha. «Yo también», dice al final, y no aclara nada más. Es la conversación más corta y más completa del tramo.",
                   "Te deja hablar veinte minutos. Después te ceba otro mate. Eso fue la respuesta."] },
     { label: "Quedarte a dormir arriba.", efectos: { aguante: 18, paranoia: -12, conciencia: 8, efecto: -18 },
@@ -415,7 +415,7 @@ PICHI.addEvents([
       fallo: { efectos: { aguante: -25, mangos: -400, paranoia: 30 }, resultado: ["No se le corre a una bici. Es geometría. Lo aprendés de la peor manera disponible."] },
       resultado: [] },
     { label: "Ofrecerles lo que tenés de fumar.", requiere: { flags: { any: ["tiene_faso"] } }, requisitoTexto: "tener faso",
-      efectos: { efecto: 15, karma: 10, conciencia: 12, paranoia: -10 },
+      pericia: "karma", efectos: { efecto: 15, karma: 10, conciencia: 12, paranoia: -10 },
       resultado: ["Sacás el faso y lo prendés ahí mismo. Se bajan de la bici. Terminan los tres sentados en un cordón. El conurbano tiene estas cosas.",
                   "Se lo convidás. Cambia todo el clima en cuatro segundos. Es una tecnología diplomática."] }
   ]
