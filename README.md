@@ -127,6 +127,32 @@ entre partidas no se toca: medido, la repetición de textos siguió en 0% en los
 Las piezas del plano astral quedan afuera — un jaguar que te acompaña todo el viaje por el
 conurbano no es un elenco, es un error.
 
+## Lo que hiciste vuelve
+
+El contenido prendía **63 flags** para registrar decisiones —una promesa, una garcada, una
+deuda, un pacto— y **54 de ellas no las leía nadie**. La maquinaria de continuidad estaba
+escrita y el motor la tiraba a la basura. `content/consecuencias.js` la lee.
+
+Cada flag tiene dos consecuencias:
+
+| campo | dónde aparece |
+|---|---|
+| `eco` | una línea sola, arriba de un evento posterior de la misma run |
+| `rastro` | el resumen final, en "lo que dejaste atrás" |
+| `karma` | corrección al Karma al cerrar la run |
+
+Los **ecos de flag** son consecuencia de una decisión concreta y tienen prioridad. Como una
+run junta solo 3 flags en promedio, hay además **16 ecos de estado** que salen de cómo viene
+el viaje (el cuerpo al límite, la deuda, la paranoia, la gente que se repite, el papelón de
+hace dos turnos) y están disponibles siempre.
+
+Un eco por turno como máximo y con 45% de probabilidad: da ~1 cada 3 turnos, ~4,7 por run.
+Con 70% llegaba al 38% de los turnos y dejaba de leerse como un recuerdo para volverse una
+cortina. Ninguno se repite dentro de la misma run.
+
+El Karma final ya no depende solo de cómo elegís el último turno: `karmaDelRastro()` cobra
+lo que hiciste durante el viaje. Cumplir una promesa vale +8, encubrir bajo declaración −12.
+
 ---
 
 ## No repetición
@@ -299,6 +325,7 @@ content/
   pieces.js                56 escenarios · 56 personajes · 55 complicaciones · 25 objetos · 40 frases
   ascii.js                 56 ilustraciones
   dados-textos.js          líneas de crítico, fallo y pifia por categoría
+  consecuencias.js         64 consecuencias de flags + 16 ecos de estado
   unlocks.js               el árbol de 35 desbloqueos
   characters.js            7 jugables · 8 reliquias · 14 logros
   endings.js               evento del Ascenso (5 redacciones) · 7 finales · 5 muertes · 44 epitafios
@@ -347,6 +374,9 @@ La suite verifica, entre otras cosas:
   aparezca seguido pero no en todas las opciones;
 - que el elenco vuelva a aparecer, que cambie entre runs y que nunca incluya piezas
   astrales;
+- que **toda flag que el contenido prende tenga consecuencia** — esta prueba existe porque
+  54 de 63 no la tenían — y que los ecos aparezcan seguido sin saturar, no se repitan dentro
+  de una run y lleguen al resumen final;
 - que la repetición de textos se mantenga en 0% a lo largo de 60 runs seguidas, medida
   tanto con el pool base como con todo desbloqueado;
 - que los 35 desbloqueos sean comprables y que no se pueda saltear un requisito;

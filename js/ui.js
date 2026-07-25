@@ -180,6 +180,7 @@ function renderJuego() {
   if (r.fase === "evento") {
     var ev = r.evento;
     html += '<div class="evento ' + cls + '">';
+    if (ev.eco) html += '<div class="eco">' + esc(PICHI.UI.distorsionar(ev.eco.texto, efecto)) + '</div>';
     html += renderAscii(ev.ascii);
     if (ev.titulo) html += '<h2>' + esc(ev.titulo) + '</h2>';
     for (var i = 0; i < ev.parrafos.length; i++) {
@@ -259,6 +260,23 @@ function renderFin() {
   if (r.puenteFinal) html += '<p class="tenue">En el Tramo IV alcanzaste: ' + esc(r.puenteFinal.nombre) + '. Y seguiste.</p>';
   for (i = 0; i < f.texto.length; i++) html += '<p>' + esc(f.texto[i]) + '</p>';
   if (f.epitafio) html += '<pre class="epitafio">' + esc("« " + f.epitafio + " »") + '</pre>';
+
+  if (r.rastro && r.rastro.length) {
+    html += '<div class="bloque"><div class="titulo-min">lo que dejaste atrás</div>';
+    for (i = 0; i < r.rastro.length; i++) {
+      var t = r.rastro[i];
+      var peso = t.karma > 0 ? '<span class="sube">+' + t.karma + ' karma</span>'
+        : (t.karma < 0 ? '<span class="baja">' + t.karma + ' karma</span>' : '');
+      html += '<div class="fila-kv' + (t.mecanica ? ' pendiente' : '') + '">' +
+        '<span>' + esc(t.texto) + '</span><span class="tenue">' + peso + '</span></div>';
+    }
+    if (r.karmaDelRastro) {
+      html += '<div class="fila-kv total"><span>lo que pesó al final</span><span class="' +
+        (r.karmaDelRastro > 0 ? 'sube' : 'baja') + '">' +
+        (r.karmaDelRastro > 0 ? '+' : '') + r.karmaDelRastro + ' karma</span></div>';
+    }
+    html += '</div>';
+  }
 
   html += '<div class="bloque"><div class="titulo-min">cómo terminó</div>';
   for (i = 0; i < PICHI.STATS.length; i++) {
@@ -483,6 +501,15 @@ function renderAyuda() {
   'El <strong>20 es crítico</strong> y el <strong>1 es pifia</strong>, siempre: el mejor preparado se puede comer un papelón y el ' +
   'más roto puede tener un momento. En un crítico lo bueno rinde más y lo malo pega menos; en una pifia, al revés. ' +
   'Las opciones sin dado son seguras, y ese contraste es el que hace que el dado importe.' +
+  '</p></div>' +
+
+  '<div class="bloque"><div class="titulo-min">lo que hiciste vuelve</div><p>' +
+  'Las decisiones quedan anotadas. Más adelante en la misma run aparece un <strong>eco</strong> —una línea sola, ' +
+  'arriba del evento— que te recuerda algo que hiciste: una promesa, una garcada, una deuda. ' +
+  'También hay ecos de cómo viene el viaje: el cuerpo, la plata, la gente que se repite.' +
+  '</p><p>' +
+  'Al terminar, el resumen incluye <strong>lo que dejaste atrás</strong>: todo lo que quedó marcado, y cuánto ' +
+  'pesó en el Karma final. No alcanza con cómo elegís el último turno.' +
   '</p></div>' +
 
   '<div class="bloque"><div class="titulo-min">el elenco</div><p>' +

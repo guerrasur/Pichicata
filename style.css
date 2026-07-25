@@ -335,3 +335,17 @@ footer span { color: var(--acento); letter-spacing: 0.1em; }
 }
 .elenco .conocido { color: var(--texto); }
 .elenco .por-conocer { opacity: 0.5; }
+
+/* ---------- ecos: lo que hiciste antes vuelve ---------- */
+
+.eco {
+  border-left: 2px solid var(--acento);
+  padding: 4px 0 4px 10px;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+  color: var(--tenue);
+  font-style: italic;
+  max-width: 62ch;
+}
+.deltas .sube, .fila-kv .sube { color: var(--bien); }
+.deltas .baja, .fila-kv .baja { color: var(--mal); }

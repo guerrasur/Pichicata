@@ -39,7 +39,7 @@ PICHI.FRANJAS_ELENCO = [
 
 PICHI.armarElenco = function () {
   var disponibles = PICHI.piezasDisponibles(PICHI.PERSONAJES);
-  var elenco = [], i, j;
+  var elenco = [], i, j, k;
 
   for (i = 0; i < PICHI.FRANJAS_ELENCO.length; i++) {
     var franja = PICHI.FRANJAS_ELENCO[i], cands = [];
@@ -99,6 +99,7 @@ PICHI.nuevaRun = function () {
     via3: (PICHI.tieneUnlock("D2") && PICHI.chance(0.5)) ? "sotano" : "clasico",
     elenco: [],
     encuentros: {},
+    ecosUsados: {},
     evento: null,
     fase: "evento",
     resolucion: null,
@@ -198,6 +199,9 @@ PICHI.siguienteEvento = function () {
   PICHI.run.ultimaCategoria = ev.categoria;
   PICHI.run.vistosEnRun[ev.id] = 1;
   PICHI.run.evento = PICHI.armarEvento(ev, ctx);
+  /* Un eco de algo que hiciste antes, si hay algo que ecoar. Va arriba del
+     evento: no es una escena, es un recuerdo que no te deja en paz. */
+  PICHI.run.evento.eco = PICHI.ecoDelTurno();
   PICHI.run.evento.opciones = PICHI.decorarOpciones(PICHI.run.evento);
   PICHI.run.fase = "evento";
   PICHI.saveRun();
@@ -648,6 +652,15 @@ PICHI.terminarRun = function (forzado) {
 };
 
 PICHI.cerrarRun = function () {
+  /* Lo que hiciste durante el viaje pesa en el Karma final, no solo la última
+     decisión: acá se cobran las promesas, las garcadas y los favores. */
+  var ajuste = PICHI.karmaDelRastro();
+  if (ajuste) {
+    PICHI.run.karmaDelRastro = ajuste;
+    PICHI.run.stats.karma = PICHI.clampStat("karma", PICHI.run.stats.karma + ajuste);
+  }
+  PICHI.run.rastro = PICHI.rastroDeLaRun();
+
   var resumen = PICHI.cerrarYPuntuar();   // meta.js
   PICHI.run.fase = "fin";
   PICHI.run.resumen = resumen;

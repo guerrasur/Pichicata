@@ -442,6 +442,125 @@ grupo("el dado", () => {
     `${conSpec} opciones tiran y solo ${conPreview} lo avisan: el riesgo sería sorpresa y no decisión`);
 });
 
+grupo("consecuencias de lo que hiciste", () => {
+  const P = cargar();
+
+  /* Toda flag que el contenido prende tiene que tener consecuencia. Este chequeo
+     existe porque 54 de 63 flags se prendían y no las leía nadie: el contenido
+     prometía consecuencias y el motor las tiraba. */
+  const seteadas = new Set();
+  for (const e of P.EVENTS.concat([P.EVENTO_ASCENSO])) {
+    for (const o of e.opciones) {
+      for (const f of [o.flags, o.riesgo && o.riesgo.flags, o.exito && o.exito.flags, o.fallo && o.fallo.flags]) {
+        if (f && f.set) f.set.forEach(x => seteadas.add(x));
+      }
+    }
+  }
+  const sinConsecuencia = [...seteadas].filter(f => !P.CONSECUENCIAS[f]);
+  afirmar(sinConsecuencia.length === 0,
+    `las ${seteadas.size} flags que prende el contenido tienen consecuencia`,
+    "flags que se prenden y nadie lee:\n       " + sinConsecuencia.join(", "));
+
+  // las entradas tienen que estar bien formadas
+  let malas = 0;
+  for (const flag in P.CONSECUENCIAS) {
+    const c = P.CONSECUENCIAS[flag];
+    if (!c.rastro) { mal(`${flag}: no tiene rastro para el resumen final`); malas++; }
+    if (!c.mecanica && (!c.eco || !c.eco.length)) { mal(`${flag}: no es mecánica y no tiene eco`); malas++; }
+    if (c.mecanica && c.eco) { mal(`${flag}: es mecánica pero tiene eco (no es una decisión)`); malas++; }
+    for (const t of (c.eco || [])) {
+      if (/\{/.test(t)) { mal(`${flag}: el eco usa un placeholder y se muestra fuera del evento`); malas++; }
+      if (!/[.!?»]$/.test(t.trim())) { mal(`${flag}: el eco no cierra la oración`); malas++; }
+    }
+  }
+  for (const e of P.ECOS_DE_ESTADO) {
+    if (!e.id || typeof e.cond !== "function" || !(e.textos || []).length) {
+      mal(`eco de estado mal formado: ${e.id || "(sin id)"}`); malas++;
+    }
+    for (const t of (e.textos || [])) {
+      if (/\{/.test(t)) { mal(`${e.id}: el eco de estado usa un placeholder`); malas++; }
+      if (!/[.!?»]$/.test(t.trim())) { mal(`${e.id}: el eco de estado no cierra la oración`); malas++; }
+    }
+  }
+  const idsEstado = P.ECOS_DE_ESTADO.map(e => e.id);
+  if (new Set(idsEstado).size !== idsEstado.length) { mal("hay ecos de estado con id repetido"); malas++; }
+  for (const id of idsEstado) {
+    if (P.CONSECUENCIAS[id]) { mal(`el id de estado "${id}" choca con una flag`); malas++; }
+  }
+
+  if (!malas) {
+    const conEco = Object.values(P.CONSECUENCIAS).filter(c => c.eco).length;
+    const mecanicas = Object.values(P.CONSECUENCIAS).filter(c => c.mecanica).length;
+    ok(`${Object.keys(P.CONSECUENCIAS).length} consecuencias bien formadas (${conEco} con eco, ${mecanicas} mecánicas) ` +
+      `+ ${P.ECOS_DE_ESTADO.length} ecos de estado`);
+  }
+
+  // el eco aparece de verdad durante la run, y no en todos los turnos
+  desbloquearTodo(P);
+  let turnosConEco = 0, turnosTotales = 0;
+  /* Solo cuentan las runs con pasado: un viaje que se muere en el turno 2 no
+     tiene nada que ecoar, y está bien que no ecoe nada. */
+  let runsLargas = 0, runsLargasConEco = 0;
+  const flagsEcoadas = new Set();
+  for (let i = 0; i < 40; i++) {
+    let ecoEnEstaRun = 0;
+    const r = jugarRun(P, ESTRATEGIAS.azar, {
+      antesDeElegir: p => {
+        turnosTotales++;
+        if (p.run.evento.eco) {
+          turnosConEco++;
+          ecoEnEstaRun++;
+          flagsEcoadas.add(p.run.evento.eco.flag);
+        }
+      }
+    });
+    if (r.turno - 1 >= 5) { runsLargas++; if (ecoEnEstaRun) runsLargasConEco++; }
+  }
+  const pct = turnosConEco / turnosTotales * 100;
+  info(`${turnosConEco} ecos en ${turnosTotales} turnos (${pct.toFixed(0)}%) · ` +
+    `${runsLargasConEco}/${runsLargas} runs de 5+ turnos tuvieron al menos uno · ` +
+    `${flagsEcoadas.size} flags distintas ecoadas`);
+  /* No se puede exigir "todas": con 5 turnos hay 3 tiradas de eco al 45%, así que
+     un 17% de las runs cortas se queda sin ninguno por pura probabilidad. Lo que
+     sí se puede exigir es que sea la enorme mayoría. */
+  const cobEcos = runsLargasConEco / runsLargas * 100;
+  afirmar(cobEcos >= 85,
+    `${cobEcos.toFixed(0)}% de las runs con pasado reciben ecos`,
+    `solo ${cobEcos.toFixed(0)}% de las runs de 5+ turnos recibe ecos: esos viajes se sienten sueltos`);
+  afirmar(turnosConEco / 40 >= 2.5, `${(turnosConEco / 40).toFixed(1)} ecos por run en promedio`,
+    `solo ${(turnosConEco / 40).toFixed(1)} ecos por run: no alcanza para que se sienta continuidad`);
+  afirmar(pct <= 35, "los ecos no aparecen en todos los turnos",
+    `los ecos saturan (${pct.toFixed(0)}% de los turnos): dejan de ser un recuerdo y son una cortina`);
+
+  // un eco no se repite dentro de la misma run
+  for (let i = 0; i < 20; i++) {
+    const vistos = [];
+    jugarRun(P, ESTRATEGIAS.azar, {
+      antesDeElegir: p => { if (p.run.evento.eco) vistos.push(p.run.evento.eco.flag); }
+    });
+    if (new Set(vistos).size !== vistos.length) {
+      mal("un eco se repitió dentro de la misma run: " + vistos.join(", "));
+      break;
+    }
+  }
+  ok("ningún eco se repite dentro de la misma run");
+
+  // el rastro llega al final y el karma se cobra
+  let conRastro = 0, conAjuste = 0;
+  for (let i = 0; i < 30; i++) {
+    const r = jugarRun(P, ESTRATEGIAS.azar);
+    if (r.rastro && r.rastro.length) conRastro++;
+    if (r.karmaDelRastro) conAjuste++;
+    for (const t of (r.rastro || [])) {
+      if (!t.texto) mal("hay una entrada de rastro sin texto");
+    }
+  }
+  afirmar(conRastro >= 25, `el rastro llega al resumen final (${conRastro}/30 runs)`,
+    `casi ninguna run deja rastro (${conRastro}/30)`);
+  afirmar(conAjuste > 0, `lo que hiciste corrige el Karma al cerrar (${conAjuste}/30 runs)`,
+    "el rastro nunca ajusta el Karma: las decisiones no pesan al final");
+});
+
 grupo("el elenco de la run", () => {
   const P = cargar();
   desbloquearTodo(P);

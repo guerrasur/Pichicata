@@ -17,6 +17,7 @@ const ARCHIVOS = [
   "content/pieces.js",
   "content/ascii.js",
   "content/dados-textos.js",
+  "content/consecuencias.js",
   "content/unlocks.js",
   "content/characters.js",
   "content/endings.js",
