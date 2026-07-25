@@ -148,6 +148,14 @@ PICHI.COMPLICACIONES = [
   { id: "cmp_nadie_vino", texto: "iban a venir doce y vinieron tres, contándote", tags: ["social", "melancolia"], hint: {}, unlock: null },
   { id: "cmp_zapatilla", texto: "perdiste una zapatilla en algún momento de las últimas dos horas", tags: ["absurdo", "cuerpo"], hint: {}, unlock: null },
 
+  // --- policiales (los eventos de la rama A8 filtran por este tag) ---
+  { id: "cmp_patrullero_esquina", texto: "hay un patrullero en la esquina con las luces apagadas y el motor prendido", tags: ["policial", "vigilancia"], hint: { paranoia: 10 }, unlock: null },
+  { id: "cmp_moto_sin_patente", texto: "pasa una moto con dos y sin patente, despacio, dos veces", tags: ["policial", "vigilancia"], hint: { paranoia: 9 }, unlock: null },
+  { id: "cmp_camara", texto: "hay una cámara municipal justo arriba y apunta para acá", tags: ["policial", "vigilancia"], hint: { paranoia: 8 }, unlock: null },
+  { id: "cmp_vecino_mira", texto: "un vecino filma todo desde el balcón del tercero sin disimular", tags: ["policial", "vigilancia", "social"], hint: { paranoia: 7 }, unlock: null },
+  { id: "cmp_operativo_lejos", texto: "cuatro cuadras más allá hay un operativo y la fila de autos llega hasta acá", tags: ["policial", "transito"], hint: { paranoia: 6 }, unlock: null },
+  { id: "cmp_documento", texto: "no tenés el documento encima y te acordás justo ahora", tags: ["policial", "personal"], hint: { paranoia: 12 }, unlock: null },
+
   // --- A7: complicaciones cósmicas ---
   { id: "cmp_dos_lunas", texto: "hay dos lunas y una de las dos claramente está de más", tags: ["trip", "astral"], hint: { paranoia: 10 }, unlock: "A7" },
   { id: "cmp_tu_voz", texto: "escuchás tu propia voz diciendo cosas que todavía no dijiste", tags: ["trip", "astral"], hint: { paranoia: 14 }, unlock: "A7" },
