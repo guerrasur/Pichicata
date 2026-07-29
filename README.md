@@ -127,6 +127,73 @@ entre partidas no se toca: medido, la repetición de textos siguió en 0% en los
 Las piezas del plano astral quedan afuera — un jaguar que te acompaña todo el viaje por el
 conurbano no es un elenco, es un error.
 
+## La run como itinerario
+
+El reporte era **"nada tiene continuidad"** y era exacto. Medido: el escenario cambiaba en
+el **100% de las transiciones entre turnos**. Una run era un pueblo de la pampa, después un
+colectivo a las tres de la mañana, después el patio de tu infancia, después un salón de
+fiestas en Villa Crespo. No era una historia, era una teletransportación con buena prosa.
+
+`js/mundo.js` le pone al viaje las dos cosas que le faltaban: un **lugar** y una **hora**.
+
+**El lugar persiste.** Si el lugar donde estás sirve para el evento que toca, te quedás:
+85% de probabilidad, que baja a 35% después de tres turnos en el mismo sitio — una run que
+no se mueve nunca tampoco es un viaje. Resultado medido: **el lugar cambia en el 42% de las
+transiciones**, no en el 100%.
+
+**Moverse es un hecho del relato.** Los 400+ cambios de lugar por cada 60 runs se narran con
+una línea de traslado antes del evento. Nunca hay un salto invisible.
+
+**Hay geografía.** No hay mapa, pero sí distancias: capital, conurbano, lejos. Desde capital
+se llega al conurbano, no al monte chaqueño entre dos escenas. Es un filtro blando —si deja
+el pool vacío se afloja— y los traslados imposibles quedaron en el 1,5%.
+
+**El reloj solo avanza.** Seis franjas de mañana a madrugada, con día que se incrementa al
+dar la vuelta. Dormir adelanta más que meditar. Un after no pasa al mediodía y un salar a
+las dos de la tarde no pasa a las cuatro de la mañana: el escenario se filtra por la luz.
+
+## Las decisiones deciden lo que sigue
+
+Antes, el evento siguiente se sorteaba por ritmo de tramo y nada más: pasara lo que pasara,
+el turno que venía no tenía ninguna relación con el anterior.
+
+Ahora cada decisión deja un **sesgo** —qué clase de cosa corresponde después— y el sorteo lo
+respeta con 75% de probabilidad. El sesgo se deriva de lo que efectivamente pasó, no de una
+etiqueta escrita a mano:
+
+| lo que pasó | lo que viene |
+|---|---|
+| pifiaste la tirada | `combate` — "lo que hiciste recién no va a quedar así" |
+| sacaste un crítico | `dialogo` — "te salió y eso se nota desde lejos" |
+| Aguante ≤ 30, o te sacaron 18+ | `descanso` — "el cuerpo no da para más" |
+| Paranoia ≥ 70, o subió 15+ | `descanso` / `combate` — "la paranoia se paga" |
+| Efecto ≥ 65, o te metiste 25+ | `trip` — "la dosis todavía está subiendo" |
+| te quedaste sin plata, o gastaste 300+ | `comercio` — "no te queda un peso y eso ordena el día" |
+| ganaste 18+ de Conciencia | `ritual` — "quedó una puerta abierta y no se cierra sola" |
+| moviste el Karma 15+ | `dialogo` — "lo que hiciste pide una conversación" |
+
+Cuando el sesgo se cumple, el porqué se dice en media línea arriba del evento. Cada causa
+tiene varias redacciones y **nunca se anuncia la misma dos veces seguidas**: repetir "la
+paranoia se paga" tres veces en cuatro turnos deja de ser causalidad y pasa a ser ruido.
+Medido: **391 turnos con causa anunciada cada 1065**, ~37%.
+
+Si el pool de esa categoría está vacío en el tramo, el sesgo no se anuncia. Nunca se promete
+una causa que después no se cumplió.
+
+### Secuelas escritas a mano
+
+Además del sesgo automático, una opción puede nombrar el evento que viene después:
+
+```js
+{ label: "Decirle que sí y arrepentirte en el acto.",
+  secuela: { evento: "ev_la_deuda_vuelve", porque: "quedaste debiendo" },
+  efectos: { mangos: 400, karma: -8 } }
+```
+
+Es la forma de escribir una escena de dos partes. Se respeta solo si el evento nombrado
+además es elegible en ese tramo; si no, se sortea normal y la escena no ocurre. También
+acepta `categoria` en vez de `evento` para sesgar sin fijar.
+
 ## Lo que hiciste vuelve
 
 El contenido prendía **63 flags** para registrar decisiones —una promesa, una garcada, una
@@ -316,9 +383,12 @@ style.css                  terminal oscura + 3 temas desbloqueables
 js/
   state.js                 stats, RNG con semilla, los tres almacenes de localStorage
   dados.js                 el d20: modificador, crítico y pifia, escala de resultados
+  mundo.js                 lugar y hora de la run: persistencia, geografía, traslados
   content-engine.js        selección anti-repetición, firmas, ensamblado del texto,
-                           y el sorteo de personas que prefiere al elenco
-  game.js                  loop de turnos, tramos, elenco, dados, muertes, finales
+                           el sorteo de personas que prefiere al elenco y el de
+                           escenarios que prefiere quedarse donde estás
+  game.js                  loop de turnos, tramos, elenco, dados, sesgo de la decisión,
+                           muertes, finales
   meta.js                  cálculo de KA, logros, tienda
   ui.js                    render, distorsión por Efecto, teclado
 content/
@@ -362,7 +432,7 @@ La suite verifica, entre otras cosas:
 
 - que `index.html` y el arnés carguen los mismos archivos (si agregás contenido y te
   olvidás de uno de los dos lados, falla);
-- estructura y referencias cruzadas de los 155 eventos, incluidos ascii y unlocks;
+- estructura y referencias cruzadas de los 173 eventos, incluidos ascii y unlocks;
 - que todo placeholder exista, tenga su slot declarado y use `{^…}` a principio de oración;
 - que ninguna pieza del plano astral se filtre a eventos mundanos y que ningún slot
   quede sin candidatos temáticos;
@@ -374,6 +444,12 @@ La suite verifica, entre otras cosas:
   aparezca seguido pero no en todas las opciones;
 - que el elenco vuelva a aparecer, que cambie entre runs y que nunca incluya piezas
   astrales;
+- que **la run sea un itinerario y no una sucesión de postales**: que el lugar cambie bien
+  por debajo del 100% de las transiciones pero tampoco se estanque, que todo cambio de
+  lugar se narre, que los traslados respeten la geografía y que el reloj solo avance;
+- que **las decisiones influyan en lo que sigue**: que un sesgo dado lleve de verdad al
+  evento que promete, que una secuela escrita traiga exactamente el evento que nombra, y
+  que nunca se anuncie la misma causa dos veces seguidas;
 - que **toda flag que el contenido prende tenga consecuencia** — esta prueba existe porque
   54 de 63 no la tenían — y que los ecos aparezcan seguido sin saturar, no se repitan dentro
   de una run y lleguen al resumen final;
@@ -400,7 +476,13 @@ Dos reglas que el motor no aplica solo, pero que las pruebas sí chequean:
 - Un placeholder a principio de oración va con `{^…}` para que se capitalice.
 - Las piezas del plano astral (`vos, a los siete`, `tu doble`…) llevan **solo** los tags
   `ego` y `astral`. Si les agregás tags genéricos se filtran a eventos mundanos y aparece
-  *vos, a los siete* comprando en un kiosco.
+  *vos, a los siete* comprando en un kiosco. Vale igual para los escenarios astrales: un
+  escenario con `astral` no cuenta como lugar del mundo y no se llega caminando.
+- Los escenarios llevan la geografía en los tags: `urbano`, `conurbano`, `remoto` o
+  `naturaleza`. Sin ninguno de esos, la pieza es bisagra y se llega desde cualquier lado —
+  útil para interiores. Los tags `dia` y `noche` limitan a qué hora puede pasar.
+
+Placeholders de mundo disponibles en cualquier texto: `{hora}`, `{dehora}` y `{lugar}`.
 
 Corré `node test/run.js` después de tocar contenido: además de esas dos reglas verifica
 que no hayas dejado un evento con pool chico ni un slot sin candidatos.

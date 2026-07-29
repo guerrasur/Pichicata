@@ -100,6 +100,16 @@ PICHI.nuevaRun = function () {
     elenco: [],
     encuentros: {},
     ecosUsados: {},
+    /* el mundo: la run empieza de tarde o de tardecita, que es cuando arrancan
+       estas cosas, y la hora solo avanza */
+    hora: 2 + PICHI.rndInt(2),
+    dia: 1,
+    lugar: null,
+    turnosEnLugar: 0,
+    lugaresVisitados: 0,
+    sesgo: null,
+    ultimaCausa: null,
+    ultimaMedito: false,
     evento: null,
     fase: "evento",
     resolucion: null,
@@ -147,8 +157,9 @@ PICHI.darReliquia = function () {
 
 /* ================= selección de evento ================= */
 
-PICHI.ctxActual = function (categoria) {
+PICHI.ctxActual = function (categoria, forzar) {
   return {
+    forzar: forzar || null,
     tramo: PICHI.run.tramo,
     stats: PICHI.run.stats,
     flags: PICHI.run.flags,
@@ -158,17 +169,128 @@ PICHI.ctxActual = function (categoria) {
   };
 };
 
+/* ---------- la decisión anterior decide qué viene ----------
+
+   Este es el mecanismo que faltaba. Antes el evento siguiente se sorteaba por
+   ritmo de tramo y nada más: pasara lo que pasara, el turno que venía no tenía
+   relación con el anterior. Ahora cada decisión deja un SESGO —qué clase de cosa
+   corresponde después— y el sorteo lo respeta.
+
+   Se deriva de lo que efectivamente pasó, no de una etiqueta en el contenido:
+   si te quedaste sin plata, lo que sigue es de plata; si te dejaron el cuerpo
+   roto, lo que sigue es descansar o no llegar; si hiciste un papelón, hay
+   consecuencia. Es causalidad legible sin escribir una línea nueva. */
+
+PICHI.sesgoDeLaDecision = function (deltas, tirada, op) {
+  /* 1. lo que el contenido dice explícitamente manda sobre todo.
+     op.secuela = { evento: "ev_id" } y/o { categoria: "combate" }, con un
+     `porque` opcional. Es la forma de escribir una escena de dos partes. */
+  if (op && op.secuela) {
+    return {
+      clave: "secuela",
+      evento: op.secuela.evento || null,
+      categoria: op.secuela.categoria || null,
+      motivo: op.secuela.porque || null
+    };
+  }
+
+  var s = PICHI.run.stats;
+  var candidatos = [];
+  /* Cada causa tiene una CLAVE estable (para no anunciar dos veces seguidas la
+     misma) y varias formas de decirse (para que la causalidad no suene a
+     mensaje de sistema). */
+  var agrega = function (clave, cat, textos, peso) {
+    for (var i = 0; i < (peso || 1); i++) {
+      candidatos.push({ clave: clave, categoria: cat, motivo: PICHI.pick(textos) });
+    }
+  };
+
+  // 2. una pifia trae cola; un crítico abre un respiro
+  if (tirada && tirada.grado === "pifia") agrega("papelon", "combate", [
+    "después de un papelón viene el lío",
+    "lo que hiciste recién no va a quedar así",
+    "alguien vio todo y alguien va a decir algo"], 3);
+  if (tirada && tirada.grado === "critico") agrega("bien", "dialogo", [
+    "cuando algo sale bien, alguien te habla",
+    "te salió y eso se nota desde lejos"], 2);
+
+  // 3. el cuerpo y la cabeza piden lo que piden
+  if (s.aguante <= 30) agrega("cuerpo", "descanso", [
+    "el cuerpo no da para más",
+    "las piernas te están pidiendo por favor"], 3);
+  if (s.paranoia >= 70) agrega("cabeza", "descanso", [
+    "la cabeza necesita bajar",
+    "no podés seguir así de acelerado"], 2);
+  if (s.efecto >= 65) agrega("arriba", "trip", [
+    "todavía estás arriba",
+    "esto todavía no se te fue"], 3);
+
+  // 4. la plata arrastra
+  if (s.mangos <= 0) agrega("plata", "comercio", [
+    "hay que conseguir plata",
+    "no te queda un peso y eso ordena el día"], 3);
+  else if ((deltas.mangos || 0) <= -300) agrega("gasto", "comercio", [
+    "se fue mucha plata de golpe",
+    "eso salió caro y ahora hay que reponerlo"], 2);
+
+  // 5. lo que se movió más en este turno decide el tono del siguiente
+  if ((deltas.paranoia || 0) >= 15) agrega("paranoia", "combate", [
+    "la paranoia se paga",
+    "quedaste mirando por encima del hombro",
+    "algo te dejó con el cuerpo en guardia"], 2);
+  if ((deltas.aguante || 0) <= -18) agrega("golpe", "descanso", [
+    "te dejaron el cuerpo",
+    "eso te sacó más de lo que parecía"], 2);
+  if ((deltas.efecto || 0) >= 25) agrega("dosis", "trip", [
+    "te metiste algo grande",
+    "la dosis todavía está subiendo"], 3);
+  if ((deltas.conciencia || 0) >= 18) agrega("apertura", "ritual", [
+    "se abrió algo y hay que sostenerlo",
+    "quedó una puerta abierta y no se cierra sola"], 2);
+  if (Math.abs(deltas.karma || 0) >= 15) agrega("karma", "dialogo", [
+    "eso tiene que hablarse con alguien",
+    "lo que hiciste pide una conversación"], 2);
+
+  if (!candidatos.length) return null;
+
+  /* No repetir la misma causa dos anuncios seguidos: leer "la paranoia se paga"
+     tres veces en cuatro turnos deja de ser causalidad y pasa a ser ruido. Se
+     compara contra la última causa DICHA, no contra el último sesgo: un sesgo
+     que no se llegó a anunciar no gastó la frase. Si no hay otra causa, el
+     sesgo sigue valiendo pero se calla. */
+  var previa = PICHI.run.ultimaCausa;
+  var otras = [];
+  for (var j = 0; j < candidatos.length; j++) if (candidatos[j].clave !== previa) otras.push(candidatos[j]);
+  if (otras.length) return PICHI.pick(otras);
+  var repe = PICHI.pick(candidatos);
+  repe.motivo = null;
+  return repe;
+};
+
+/* Queda en true cuando la categoría del turno la puso el sesgo y no el ritmo del
+   tramo. Sirve para no anunciar una causalidad que después no se cumplió. */
+var categoriaPorSesgo = false;
+
 function categoriaDelTurno() {
-  var def = PICHI.tramoDef(PICHI.run.tramo);
-  var idx = (PICHI.run.turnoEnTramo - 1) % def.ritmo.length;
+  var r = PICHI.run;
+  var def = PICHI.tramoDef(r.tramo);
+  categoriaPorSesgo = false;
+
+  /* El sesgo que dejó la decisión anterior tiene prioridad: es lo que hace que
+     un turno se lea como consecuencia del anterior y no como una postal nueva. */
+  if (r.sesgo && r.sesgo.categoria && PICHI.chance(0.75)) {
+    categoriaPorSesgo = true;
+    return r.sesgo.categoria;
+  }
+
+  var idx = (r.turnoEnTramo - 1) % def.ritmo.length;
   var cat = def.ritmo[idx];
-  // un poco de jitter para que no sea una plantilla rígida
-  if (PICHI.chance(0.25)) {
+  if (PICHI.chance(0.2)) {
     var todas = ["dialogo", "trip", "combate", "descanso", "comercio", "ruta", "ritual"];
     cat = PICHI.pick(todas);
   }
   // nunca dos veces la misma categoría seguida (salvo diálogo)
-  if (PICHI.run.ultimaCategoria === cat && cat !== "dialogo") {
+  if (r.ultimaCategoria === cat && cat !== "dialogo") {
     var alt = ["dialogo", "trip", "combate", "descanso", "comercio", "ruta", "ritual"];
     for (var i = 0; i < 6; i++) { var c = PICHI.pick(alt); if (c !== cat) { cat = c; break; } }
   }
@@ -188,17 +310,34 @@ PICHI.siguienteEvento = function () {
   }
 
   var cat = categoriaDelTurno();
-  var ctx = PICHI.ctxActual(cat);
+  var honraSesgo = categoriaPorSesgo;
+  var forzado = (PICHI.run.sesgo && PICHI.run.sesgo.evento) ? PICHI.run.sesgo.evento : null;
+  var ctx = PICHI.ctxActual(cat, forzado);
   var ev = PICHI.elegirEvento(ctx);
   if (!ev) { // pool vacío para este tramo: probamos sin categoría
+    honraSesgo = false;
     ctx = PICHI.ctxActual(null);
     ev = PICHI.elegirEvento(ctx);
   }
   if (!ev) { PICHI.terminarRun(null); return; }
+  /* Que la categoría pedida existiera no garantiza que haya salido: elegirEvento
+     cae a todo el pool si la categoría está vacía en este tramo. */
+  if (forzado && ev.id === forzado) honraSesgo = true;
+  else if (cat && ev.categoria !== cat) honraSesgo = false;
 
   PICHI.run.ultimaCategoria = ev.categoria;
   PICHI.run.vistosEnRun[ev.id] = 1;
   PICHI.run.evento = PICHI.armarEvento(ev, ctx);
+  /* Si el turno vino del sesgo, se dice por qué. Es media línea y es la
+     diferencia entre "pasó otra cosa" y "pasó esto POR lo que hiciste".
+     Solo se anuncia cuando el sesgo se cumplió de verdad: si el pool estaba
+     vacío y hubo que sortear sin categoría, no se promete una causa que no hubo. */
+  PICHI.run.evento.porque = (honraSesgo && PICHI.run.sesgo && PICHI.run.sesgo.motivo)
+    ? PICHI.run.sesgo.motivo : null;
+  if (PICHI.run.evento.porque) PICHI.run.ultimaCausa = PICHI.run.sesgo.clave;
+  /* El escenario elegido pasa a ser DONDE ESTÁS. Si cambió, el traslado se narra:
+     un salto de lugar tiene que ser un hecho del relato y no un corte de montaje. */
+  PICHI.run.evento.traslado = PICHI.fijarLugar(PICHI.run.evento.piezas.escenario);
   /* Un eco de algo que hiciste antes, si hay algo que ecoar. Va arriba del
      evento: no es una escena, es un recuerdo que no te deja en paz. */
   PICHI.run.evento.eco = PICHI.ecoDelTurno();
@@ -462,6 +601,11 @@ PICHI.elegirOpcion = function (indice) {
   PICHI.run.marcas.decisiones++;
   PICHI.aplicarStats(deltas);
 
+  /* Acá se cierra el circuito: lo que acabás de hacer decide de qué clase va a
+     ser lo que viene. Sin esta línea el sesgo se calculaba y no servía de nada. */
+  PICHI.run.sesgo = PICHI.sesgoDeLaDecision(deltas, tirada, op);
+  PICHI.run.ultimaMedito = !!op.medita;
+
   /* El pico queda registrado en aplicarStats. Se chequea en continuar(), donde
      el metabolismo ya bajó el Efecto: la sobredosis se juega con la dosis que
      te metiste, no con lo que te queda después de metabolizarla. */
@@ -569,6 +713,7 @@ PICHI.continuar = function () {
 
   PICHI.run.resolucion = null;
   PICHI.run.efectoCrudo = PICHI.run.stats.efecto;   // el pico no se arrastra al turno siguiente
+  PICHI.avanzarHora(PICHI.run.ultimaCategoria, PICHI.run.ultimaMedito);
   PICHI.siguienteEvento();
 };
 
@@ -682,6 +827,12 @@ PICHI.rechazarEvento = function () {
 PICHI.reanudar = function () {
   var r = PICHI.Save.read(PICHI.KEYS.run, null);
   if (!r || !r.stats) return false;
+  /* Una run guardada por una versión anterior no tiene mundo. Sin estos
+     defaults la hora sale NaN y el reloj deja de avanzar para siempre. */
+  if (typeof r.hora !== "number") r.hora = 2;
+  if (typeof r.dia !== "number") r.dia = 1;
+  if (typeof r.turnosEnLugar !== "number") r.turnosEnLugar = 0;
+  if (!("lugar" in r)) r.lugar = null;
   PICHI.run = r;
   if (r.fase === "evento" && (!r.evento || !r.evento.opciones)) { PICHI.siguienteEvento(); return true; }
   PICHI.UI.render();

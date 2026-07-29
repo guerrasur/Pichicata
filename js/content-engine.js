@@ -51,6 +51,65 @@ function candidatosSlot(tabla, filtro) {
   return estrictos.length ? estrictos : disp;
 }
 
+/* Los escenarios del plano astral solo salen si el evento los pide EXPLÍCITAMENTE.
+   Tienen tags mundanos ("interior", "trip") y por eso se estaban filtrando a
+   eventos comunes: el patio de tu infancia aparecía como escenario de una plaza. */
+function candidatosEscenario(filtro) {
+  var pideAstral = !!(filtro && filtro.tags && filtro.tags.indexOf("astral") !== -1);
+  var cands = candidatosSlot(PICHI.ESCENARIOS, filtro);
+  if (pideAstral) return cands;
+  var mundanos = [];
+  for (var i = 0; i < cands.length; i++) if (!PICHI.esAstral(cands[i])) mundanos.push(cands[i]);
+  return mundanos.length ? mundanos : cands;
+}
+
+/* El LUGAR es lo que más pesa en que una run se lea como una historia: si cambia
+   todos los turnos, cada evento es una postal suelta. Acá se prefiere quedarse
+   donde estás, y cuando hay que moverse se elige algo compatible con la hora. */
+function sortearEscenario(cands, usadasRun) {
+  if (!cands.length) return null;
+  var r = PICHI.run;
+  if (!r) return sortearPieza(cands, usadasRun);
+
+  var i, lugar = PICHI.lugarActual();
+
+  // ¿el lugar donde estás sirve para este evento?
+  if (lugar) {
+    for (i = 0; i < cands.length; i++) {
+      if (cands[i].id !== lugar.id) continue;
+      /* Te quedás, salvo que ya lleves demasiado tiempo acá: una run que no se
+         mueve nunca tampoco es un viaje. */
+      var muchoRato = (r.turnosEnLugar || 0) >= 3;
+      if (PICHI.chance(muchoRato ? 0.35 : 0.85)) return cands[i];
+      break;
+    }
+  }
+
+  /* Hay que moverse. Dos filtros blandos, en orden de importancia: que se pueda
+     LLEGAR desde donde estás (nada de Barracas al monte chaqueño entre dos
+     escenas) y que cierre con la hora del día. Blandos porque si un filtro deja
+     el pool vacío se usa el anterior: es mejor un traslado inverosímil que un
+     evento sin escenario. */
+  var otros = [];
+  for (i = 0; i < cands.length; i++) {
+    if (lugar && cands[i].id === lugar.id) continue;
+    otros.push(cands[i]);
+  }
+  if (!otros.length) otros = cands;
+
+  var cerca = [];
+  if (lugar) {
+    for (i = 0; i < otros.length; i++) if (PICHI.seLlegaDesde(lugar, otros[i])) cerca.push(otros[i]);
+  }
+  var fuente = cerca.length ? cerca : otros;
+
+  var aLaHora = [];
+  for (i = 0; i < fuente.length; i++) {
+    if (PICHI.escenarioVaConLaHora(fuente[i], r.hora)) aLaHora.push(fuente[i]);
+  }
+  return sortearPieza(aLaHora.length ? aLaHora : fuente, usadasRun);
+}
+
 // Sortea una pieza priorizando las que no se usaron todavía en esta run.
 function sortearPieza(cands, usadasRun) {
   if (!cands.length) return null;
@@ -156,6 +215,13 @@ PICHI.elegirEvento = function (ctx) {
   for (i = 0; i < PICHI.EVENTS.length; i++) if (PICHI.eventoElegible(PICHI.EVENTS[i], ctx)) pool.push(PICHI.EVENTS[i]);
   if (!pool.length) return null;
 
+  /* Secuela escrita a mano: una opción puede nombrar el evento que viene después.
+     Solo se respeta si además es elegible acá y ahora; si no, se sortea normal y
+     la escena de dos partes simplemente no ocurre. */
+  if (ctx.forzar) {
+    for (i = 0; i < pool.length; i++) if (pool[i].id === ctx.forzar) return pool[i];
+  }
+
   // preferencia de categoría (ritmo del tramo)
   var cands = pool;
   if (ctx.categoria) {
@@ -246,7 +312,7 @@ function elegirVariante(ev) {
 function sortearPiezas(ev, ctx) {
   var slots = ev.slots || {};
   var piezas = {};
-  if (slots.escenario) piezas.escenario = sortearPieza(candidatosSlot(PICHI.ESCENARIOS, slots.escenario), ctx.piezasUsadas);
+  if (slots.escenario) piezas.escenario = sortearEscenario(candidatosEscenario(slots.escenario), ctx.piezasUsadas);
   if (slots.personaje) piezas.personaje = sortearPersonaje(candidatosSlot(PICHI.PERSONAJES, slots.personaje), ctx.piezasUsadas);
   if (slots.personaje2) {
     var cands = candidatosSlot(PICHI.PERSONAJES, slots.personaje2);
@@ -285,7 +351,10 @@ PICHI.renderTexto = function (str, piezas) {
     "{personaje2.desc}": p2 ? p2.desc : "alguien más",
     "{complicacion}": cmp ? cmp.texto : "algo no cierra del todo",
     "{objeto}": piezas.objeto ? piezas.objeto.texto : "algo que no vale nada",
-    "{frase}": piezas.frase || "todo es todo"
+    "{frase}": piezas.frase || "todo es todo",
+    "{hora}": PICHI.horaActual().nombre,
+    "{dehora}": PICHI.horaActual().de,
+    "{lugar}": (function () { var l = PICHI.lugarActual(); return l ? l.nombre : "donde estás"; })()
   };
   var out = str;
   for (var k in map) {

@@ -336,6 +336,35 @@ footer span { color: var(--acento); letter-spacing: 0.1em; }
 .elenco .conocido { color: var(--texto); }
 .elenco .por-conocer { opacity: 0.5; }
 
+/* ---------- continuidad: dónde estás, cómo llegaste, por qué esto ---------- */
+
+/* Cómo llegaste hasta acá. Va suelto arriba de todo, sin marco: es tránsito,
+   no escena. */
+.traslado {
+  font-size: 0.85rem;
+  color: var(--tenue);
+  margin-bottom: 10px;
+  max-width: 62ch;
+}
+
+/* Por qué esto y no otra cosa. Es la causalidad dicha en voz baja. */
+.porque {
+  font-size: 0.8rem;
+  color: var(--tenue);
+  opacity: 0.85;
+  margin-bottom: 12px;
+}
+.porque::before { content: "— "; }
+
+/* Hora y lugar: el itinerario de la run. */
+.donde {
+  font-size: 0.8rem;
+  color: var(--tenue);
+  padding: 2px 0 6px;
+  border-bottom: 1px dashed var(--borde);
+  margin-bottom: 8px;
+}
+
 /* ---------- ecos: lo que hiciste antes vuelve ---------- */
 
 .eco {

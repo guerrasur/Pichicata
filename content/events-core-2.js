@@ -552,6 +552,7 @@ PICHI.addEvents([
       resultado: ["Negociás fuerte. Te respeta más y te quiere menos, que es el intercambio estándar.",
                   "Sacás mejor tajada. Descubrís que sos bueno en esto y eso te preocupa correctamente."] },
     { label: "Robarle la lista de contactos.", pericia: "karma", efectos: { mangos: 500, karma: -22, paranoia: 25 }, flags: { set: ["traicion"] },
+      secuela: { evento: "ev_deuda_cobra", porque: "le sacaste algo a alguien que sabe dónde encontrarte" },
       resultado: ["Le sacás una foto a la planilla mientras va al baño. Ahora tenés el negocio sin el socio y un problema para más adelante.",
                   "Te llevás la lista. Va a haber consecuencias y no van a llegar hoy."] }
   ]
