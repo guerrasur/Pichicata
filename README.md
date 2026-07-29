@@ -500,6 +500,13 @@ mejor cosecha de KA y cuántos textos distintos leíste en total.
 `1`-`5` eligen opción, `Espacio` o `Enter` avanzan. La run se guarda en cada turno: podés
 cerrar la pestaña y seguir después.
 
+## Qué falta
+
+Hay continuidad de escena a escena (el elenco, los ecos, el lugar, el sesgo de la decisión),
+pero todavía no hay una **columna vertebral**: nada que se abra en el Tramo I y se cierre en
+el IV. El próximo paso son los **hilos** y está diseñado en [`HANDOFF.md`](HANDOFF.md), junto
+con dónde engancha en el código, qué pruebas necesita y las trampas conocidas del repo.
+
 ## Tono
 
 Sátira espiritual under, en rioplatense. Misticismo de galpón cruzado con humor negro,
