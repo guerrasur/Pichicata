@@ -66,6 +66,7 @@ grupo("estructura de los eventos", () => {
   let errores = 0;
 
   const todos = P.EVENTS.concat([P.EVENTO_ASCENSO]);
+  const ids = new Set(todos.map(e => e.id));
   for (const e of todos) {
     const err = m => { mal(`${e.id}: ${m}`); errores++; };
 
@@ -94,6 +95,17 @@ grupo("estructura de los eventos", () => {
         err(`riesgo con probabilidad inválida en "${o.label}"`);
       }
       if (o.unlock && !P.UNLOCK_BY_ID[o.unlock]) err(`opción con unlock inexistente "${o.unlock}"`);
+      /* Una secuela que apunta a un id inexistente no explota: simplemente no
+         pasa nada, que es la peor forma de romperse. */
+      if (o.secuela) {
+        if (o.secuela.evento && !ids.has(o.secuela.evento)) {
+          err(`secuela apunta a un evento inexistente "${o.secuela.evento}"`);
+        }
+        if (o.secuela.categoria && !CATEGORIAS.includes(o.secuela.categoria)) {
+          err(`secuela con categoría desconocida "${o.secuela.categoria}"`);
+        }
+        if (!o.secuela.evento && !o.secuela.categoria) err(`secuela vacía en "${o.label}"`);
+      }
     });
   }
 
@@ -559,6 +571,125 @@ grupo("consecuencias de lo que hiciste", () => {
     `casi ninguna run deja rastro (${conRastro}/30)`);
   afirmar(conAjuste > 0, `lo que hiciste corrige el Karma al cerrar (${conAjuste}/30 runs)`,
     "el rastro nunca ajusta el Karma: las decisiones no pesan al final");
+});
+
+/* Este grupo existe por un reporte concreto: "nada tiene continuidad". Medido,
+   el escenario cambiaba en el 100% de las transiciones entre turnos —una run era
+   una teletransportación con buena prosa— y el turno siguiente no tenía ninguna
+   relación con la decisión anterior. Todo lo de acá abajo es esa medición. */
+grupo("continuidad de la run", () => {
+  const P = cargar();
+  desbloquearTodo(P);
+  const RUNS = RAPIDO ? 15 : 60;
+
+  let transiciones = 0, cambios = 0, sinNarrar = 0;
+  let quedadasLargas = 0, imposibles = 0;
+  let conSesgo = 0, sesgoCumplido = 0, causaAnunciada = 0;
+  let horaAtras = 0, causaRepetida = 0;
+  let diaPrev = 1;
+
+  for (let n = 0; n < RUNS; n++) {
+    let lugarPrev = null, horaPrev = null, causaPrev = null;
+    diaPrev = 1;
+    jugarRun(P, ESTRATEGIAS.azar, {
+      antesDeElegir: (P) => {
+        const ev = P.run.evento, lugar = P.run.lugar;
+
+        if (lugarPrev !== null) {
+          transiciones++;
+          if (lugar !== lugarPrev) {
+            cambios++;
+            if (!ev.traslado) sinNarrar++;
+            const desde = P.ESCENARIOS.find(e => e.id === lugarPrev);
+            const hasta = P.ESCENARIOS.find(e => e.id === lugar);
+            if (desde && hasta && !P.seLlegaDesde(desde, hasta)) imposibles++;
+          }
+        }
+        if ((P.run.turnosEnLugar || 0) >= 5) quedadasLargas++;
+        lugarPrev = lugar;
+
+        // el reloj solo avanza
+        if (horaPrev !== null && P.run.hora < horaPrev && P.run.dia <= diaPrev) horaAtras++;
+        horaPrev = P.run.hora; diaPrev = P.run.dia;
+
+        if (ev.porque) {
+          causaAnunciada++;
+          if (ev.porque === causaPrev) causaRepetida++;
+          causaPrev = ev.porque;
+        }
+      }
+    });
+  }
+
+  // 1. el lugar persiste
+  const pct = 100 * cambios / transiciones;
+  info(`el lugar cambia en el ${pct.toFixed(0)}% de las transiciones (antes: 100%)`);
+  afirmar(pct < 70, `la run se queda en el mismo lugar buena parte del tiempo (${pct.toFixed(0)}% de cambios)`,
+    `el lugar cambia el ${pct.toFixed(0)}% de las veces: la run sigue siendo una sucesión de postales`);
+  afirmar(pct > 15, "la run igual se mueve (no se queda clavada en un solo lugar)",
+    `el lugar casi no cambia (${pct.toFixed(0)}%): la run se estanca`);
+
+  // 2. cambiar de lugar siempre se narra
+  afirmar(sinNarrar === 0, `los ${cambios} cambios de lugar se narran como traslado`,
+    `${sinNarrar} cambios de lugar sin línea de traslado: saltos invisibles`);
+
+  // 3. no se cruza medio país entre dos escenas
+  info(`traslados entre regiones no vecinas: ${imposibles} de ${cambios}`);
+  afirmar(imposibles / Math.max(1, cambios) < 0.1,
+    "los traslados respetan la geografía casi siempre",
+    `${imposibles}/${cambios} traslados imposibles: el itinerario no cierra`);
+
+  // 4. el reloj no vuelve para atrás
+  afirmar(horaAtras === 0, "la hora solo avanza",
+    `${horaAtras} veces el reloj volvió para atrás dentro del mismo día`);
+
+  // 5. la decisión anterior manda sobre el turno siguiente
+  info(`turnos con causa anunciada: ${causaAnunciada} de ${transiciones + RUNS}`);
+  afirmar(causaAnunciada > transiciones * 0.15,
+    `las decisiones encadenan turnos de forma visible (${causaAnunciada} veces)`,
+    `casi nunca se anuncia una causa (${causaAnunciada}): las decisiones no influyen en lo que sigue`);
+  afirmar(causaRepetida === 0, "nunca se anuncia la misma causa dos turnos seguidos",
+    `${causaRepetida} veces se repitió la causa anunciada: deja de leerse como causalidad`);
+
+  // 6. el sesgo lleva de verdad a la categoría que promete
+  const P2 = cargar();
+  desbloquearTodo(P2);
+  P2.nuevaRun();
+  for (const cat of ["combate", "descanso", "trip", "comercio", "dialogo"]) {
+    P2.run.sesgo = { clave: "test", categoria: cat, motivo: "prueba" };
+    let aciertos = 0;
+    for (let i = 0; i < 60; i++) {
+      P2.run.vistosEnRun = {};
+      P2.run.sesgo = { clave: "test", categoria: cat, motivo: "prueba" };
+      P2.siguienteEvento();
+      if (P2.run.evento.categoria === cat) aciertos++;
+    }
+    /* El sesgo manda con 75% de probabilidad y después el pool de esa categoría
+       tiene que tener algo en este tramo, así que el piso está en ~55%. Sin
+       sesgo, con 7 categorías, el azar daría ~14%: lo que se mide es que el
+       mecanismo domine, no que sea determinista. */
+    afirmar(aciertos >= 33, `el sesgo "${cat}" lleva al evento prometido (${aciertos}/60)`,
+      `el sesgo "${cat}" casi no se respeta (${aciertos}/60)`);
+  }
+
+  // 7. una secuela escrita a mano trae el evento que nombra
+  const objetivo = P2.EVENTS.find(e => e.categoria === "dialogo" && (e.tramo || []).indexOf(1) !== -1);
+  P2.nuevaRun();
+  let salio = 0;
+  for (let i = 0; i < 20; i++) {
+    P2.run.vistosEnRun = {};
+    P2.run.sesgo = P2.sesgoDeLaDecision({}, null, { secuela: { evento: objetivo.id, porque: "quedó pendiente" } });
+    P2.siguienteEvento();
+    if (P2.run.evento.id === objetivo.id) salio++;
+  }
+  afirmar(salio === 20, `una secuela escrita trae exactamente el evento que nombra (${objetivo.id})`,
+    `la secuela no se respetó (${salio}/20)`);
+
+  // 8. y el contenido de verdad usa el mecanismo (si no, es código muerto)
+  let escritas = 0;
+  for (const e of P2.EVENTS) for (const o of e.opciones || []) if (o.secuela) escritas++;
+  afirmar(escritas > 0, `el contenido escribe ${escritas} secuelas a mano`,
+    "ninguna opción usa `secuela`: la escena de dos partes es código muerto");
 });
 
 grupo("el elenco de la run", () => {

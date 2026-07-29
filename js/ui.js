@@ -93,12 +93,22 @@ function renderStats() {
     elenco = '<div class="elenco">en el viaje: ' + partes.join(' · ') + '</div>';
   }
 
+  /* Dónde estás y qué hora es. Es la línea que convierte una secuencia de
+     escenas en un itinerario: si no se ve, el jugador no registra que se quedó
+     en el mismo lugar tres turnos ni que se le hizo de noche. */
+  var lugar = PICHI.lugarActual();
+  var hora = PICHI.horaActual();
+  var dia = PICHI.run.dia > 1 ? ' · día ' + PICHI.run.dia : '';
+  var donde = '<div class="donde">' + esc(hora.nombre) +
+    (lugar ? ' · ' + esc(lugar.nombre) : ' · en ningún lado del mapa') + esc(dia) + '</div>';
+
   var def4 = PICHI.tramoDef(PICHI.run.tramo);
   return '<div class="hud">' +
     '<div class="hud-top">' +
       '<span class="tramo">' + esc(PICHI.nombreTramo(PICHI.run.tramo)) + '</span>' +
       '<span class="turno">turno ' + PICHI.run.turno + ' · paso ' + Math.min(PICHI.run.turnoEnTramo, def4.turnos) + '/' + def4.turnos + '</span>' +
     '</div>' +
+    donde +
     '<div class="stats">' + out + '</div>' + elenco + rel +
     '</div>';
 }
@@ -180,6 +190,11 @@ function renderJuego() {
   if (r.fase === "evento") {
     var ev = r.evento;
     html += '<div class="evento ' + cls + '">';
+    /* El traslado y el porqué van ANTES del evento: uno dice cómo llegaste acá,
+       el otro dice por qué esto y no otra cosa. Sin ellos cada turno se leía
+       como una postal suelta. */
+    if (ev.traslado) html += '<div class="traslado">' + esc(PICHI.UI.distorsionar(ev.traslado, efecto)) + '</div>';
+    if (ev.porque) html += '<div class="porque">' + esc(ev.porque) + '</div>';
     if (ev.eco) html += '<div class="eco">' + esc(PICHI.UI.distorsionar(ev.eco.texto, efecto)) + '</div>';
     html += renderAscii(ev.ascii);
     if (ev.titulo) html += '<h2>' + esc(ev.titulo) + '</h2>';
@@ -501,6 +516,20 @@ function renderAyuda() {
   'El <strong>20 es crítico</strong> y el <strong>1 es pifia</strong>, siempre: el mejor preparado se puede comer un papelón y el ' +
   'más roto puede tener un momento. En un crítico lo bueno rinde más y lo malo pega menos; en una pifia, al revés. ' +
   'Las opciones sin dado son seguras, y ese contraste es el que hace que el dado importe.' +
+  '</p></div>' +
+
+  '<div class="bloque"><div class="titulo-min">el viaje tiene un mapa y un reloj</div><p>' +
+  'Arriba de las stats dice <strong>qué hora es y dónde estás</strong>. El lugar no cambia cada turno: ' +
+  'te quedás donde estás mientras sirva, y cuando te movés el traslado se cuenta. La hora solo avanza, ' +
+  'y dormir la adelanta más que meditar: un after no pasa al mediodía.' +
+  '</p><p>' +
+  'También hay distancias. Desde la capital se llega al conurbano; al monte no se va entre dos escenas.' +
+  '</p></div>' +
+
+  '<div class="bloque"><div class="titulo-min">lo que elegís decide lo que sigue</div><p>' +
+  'Cada decisión deja un sesgo y el turno siguiente lo respeta. Si pifiaste, viene el lío. Si te quedaste ' +
+  'sin plata, el día se ordena alrededor de conseguirla. Si te metiste algo grande, lo que sigue pasa arriba. ' +
+  'Cuando eso ocurre, arriba del evento hay <strong>media línea que dice por qué</strong>.' +
   '</p></div>' +
 
   '<div class="bloque"><div class="titulo-min">lo que hiciste vuelve</div><p>' +

@@ -86,10 +86,18 @@ async function foto(page, nombre) {
 
   // el dado tiene que verse ANTES de elegir, no después
   let previos = 0, vistos = 0;
-  for (let t = 0; t < 12; t++) {
+  for (let t = 0; t < 16; t++) {
+    /* Si la run se murió, se arranca otra: la muestra tiene que ser de turnos
+       jugados, no de la suerte que tuvo la primera run. */
+    if (!(await page.$(".opcion[data-op]")) && await page.$('[data-act="nueva"]')) {
+      await page.click('[data-act="nueva"]');
+      await page.waitForTimeout(25);
+    }
     if (!(await page.$(".opcion[data-op]"))) break;
     previos += await page.$$eval(".dado-previo", els => els.length);
-    await page.keyboard.press("1");
+    /* Se rota la opción: la primera suele ser la segura y apretar siempre "1"
+       hacía que la muestra no tocara ni una tirada en toda la corrida. */
+    await page.keyboard.press(String((t % 3) + 1));
     await page.waitForTimeout(25);
     if (await page.$(".tirada")) {
       vistos++;
@@ -103,7 +111,7 @@ async function foto(page, nombre) {
       await page.waitForTimeout(25);
     }
   }
-  afirmar(previos > 0, `el pronóstico del dado se muestra antes de elegir (${previos} veces en 12 turnos)`,
+  afirmar(previos > 0, `el pronóstico del dado se muestra antes de elegir (${previos} veces)`,
     "el dado no se anuncia antes de elegir: el riesgo es sorpresa y no decisión");
   afirmar(vistos > 0, `el resultado del dado se muestra al resolver (${vistos} veces)`,
     "el resultado del dado no se muestra");
@@ -112,19 +120,53 @@ async function foto(page, nombre) {
   // los ecos: lo que hiciste antes tiene que volver
   let ecos = 0;
   const textosEco = [];
-  for (let t = 0; t < 14; t++) {
+  for (let t = 0; t < 26; t++) {
     if (await page.$(".eco")) {
       ecos++;
       if (textosEco.length < 2) textosEco.push((await page.textContent(".eco")).trim());
     }
     if (await page.$(".opcion[data-op]")) await page.keyboard.press("2");
     else if (await page.$('[data-act="continuar"]')) await page.click('[data-act="continuar"]');
+    /* La run se murió antes de tiempo: se arranca otra y se sigue mirando. Los
+       ecos necesitan pasado, y una run de dos turnos no tiene. Sin esto la
+       prueba fallaba ~1 de cada 4 veces por mala suerte, no por un bug. */
+    else if (await page.$('[data-act="nueva"]')) await page.click('[data-act="nueva"]');
     else break;
     await page.waitForTimeout(20);
   }
-  afirmar(ecos > 0, `los ecos aparecen durante la run (${ecos} en 14 turnos)`,
+  afirmar(ecos > 0, `los ecos aparecen durante la run (${ecos} en 26 turnos)`,
     "no apareció ningún eco: los turnos siguen sueltos");
   textosEco.forEach(t => info("eco: «" + t + "»"));
+
+  /* La continuidad tiene que VERSE, no solo existir en el estado: dónde estás,
+     cómo llegaste y por qué esto y no otra cosa. */
+  console.log("\n\x1b[1mcontinuidad en pantalla\x1b[0m");
+  let traslados = 0, porques = 0, lugares = new Set();
+  const muestras = [];
+  const VUELTAS = 60;
+  for (let t = 0; t < VUELTAS; t++) {
+    const donde = await page.$(".donde");
+    if (donde) lugares.add((await donde.textContent()).trim());
+    const tr = await page.$(".traslado");
+    if (tr) { traslados++; if (muestras.length < 2) muestras.push("traslado: «" + (await tr.textContent()).trim() + "»"); }
+    const pq = await page.$(".porque");
+    if (pq) { porques++; if (muestras.length < 4) muestras.push("porque: «" + (await pq.textContent()).trim() + "»"); }
+
+    // se alterna la opción para que la run dure y el itinerario tenga largo
+    if (await page.$(".opcion[data-op]")) await page.keyboard.press(t % 2 ? "1" : "2");
+    else if (await page.$('[data-act="continuar"]')) await page.click('[data-act="continuar"]');
+    else if (await page.$('[data-act="nueva"]')) await page.click('[data-act="nueva"]');
+    else break;
+    await page.waitForTimeout(20);
+  }
+  afirmar(lugares.size > 0, `el HUD dice dónde estás y qué hora es (${lugares.size} estados distintos)`,
+    "el HUD no muestra hora ni lugar: la run no tiene itinerario");
+  afirmar(traslados > 0, `los traslados se narran en pantalla (${traslados} en ${VUELTAS} turnos)`,
+    "nunca se narró un traslado: los cambios de lugar siguen siendo cortes invisibles");
+  afirmar(porques > 0, `se explica por qué pasa lo que pasa (${porques} en ${VUELTAS} turnos)`,
+    "nunca se anunció una causa: las decisiones no se ven influir en lo que sigue");
+  muestras.forEach(m => info(m));
+  await foto(page, "3b-continuidad");
 
   // alternamos teclado y mouse hasta llegar a un final
   let turnos = 0, i = 0;

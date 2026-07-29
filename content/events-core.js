@@ -465,6 +465,7 @@ PICHI.addEvents([
   ],
   opciones: [
     { label: "Tomar la toma completa.", efectos: { efecto: 38, conciencia: 10, aguante: -12, paranoia: 8 }, flags: { set: ["tomo_aya"] },
+      secuela: { evento: "ev_purga", porque: "lo que tomaste tiene que salir por algún lado" },
       resultado: ["Baja como aceite tibio con gusto a tierra. Los primeros veinte minutos no pasa nada y esos son los peores.",
                   "Tomás todo de un saque. {^personaje.nombre} levanta las cejas, que es su forma de decir «uh»."] },
     { label: "Tomar media y guardar el resto.", efectos: { efecto: 18, conciencia: 4, aguante: -5 }, flags: { set: ["tomo_aya"] },
@@ -474,6 +475,7 @@ PICHI.addEvents([
       resultado: ["Te lo llevás a la boca y no tragás. Después escupís en {objeto}. Nadie te ve. Vos te ves.",
                   "Simulás. Durante las siguientes cuatro horas actuás de persona en un trance, lo cual es agotador."] },
     { label: "Tomar y pedir otra.", requiere: { stats: { efecto: { max: 25 }, aguante: { min: 45 } } }, requisitoTexto: "Efecto ≤25 y Aguante 45",
+      secuela: { evento: "ev_purga", porque: "pediste doble y el cuerpo tiene su propia opinión" },
       efectos: { efecto: 55, conciencia: 18, aguante: -20, paranoia: 12 }, flags: { set: ["tomo_aya", "doble_toma"] },
       riesgo: { prob: 0.4, efectos: { aguante: -12, paranoia: 15 }, resultado: ["Purga sin final. Cuatro horas de balde. Te perdés lo que sea que haya pasado en la ronda y todos te miran distinto después."] },
       resultado: ["Extendés el vaso. Hay un silencio en la ronda. {^personaje.nombre} sirve igual, porque no va a discutir en público.",

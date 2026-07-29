@@ -13,6 +13,7 @@ const RAIZ = path.join(__dirname, "..");
 const ARCHIVOS = [
   "js/state.js",
   "js/dados.js",
+  "js/mundo.js",
   "js/content-engine.js",
   "content/pieces.js",
   "content/ascii.js",
